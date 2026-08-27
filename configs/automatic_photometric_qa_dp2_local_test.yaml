@@ -2,6 +2,8 @@ notebook:
   title: Rubin DP2 — scrambled local sample
   subtitle: Basic dataset characterization
   last_verified_run: '2026-08-25'
+  introduction: This notebook provides lightweight statistics and diagnostic plots
+    for quick characterization of the data product.
 catalogs:
 - title: Rubin DP2 — scrambled local sample
   path: ../data/sample/rubin_dp2_1000_sample_scrambled.parquet

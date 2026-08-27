@@ -122,7 +122,7 @@ selected statistics, plots, and survey footprints.
 
 Required global YAML sections:
 
-- `notebook`: report title, subtitle, and last verified run date.
+- `notebook`: report title, subtitle, optional introduction, and last verified run date.
 - `catalogs`: one or more catalog configurations.
 - `cluster`: Dask backend configuration shared by all catalogs.
 
@@ -154,6 +154,10 @@ The exported report uses this heading hierarchy:
 
 Relative paths in the YAML are resolved relative to the YAML file location.
 
+`notebook.introduction` is optional. When it is configured, the report renders it
+between horizontal rules below the global header. When it is absent or empty, no
+introduction section is shown.
+
 Minimal multi-catalog structure:
 
 ```yaml
@@ -161,6 +165,9 @@ notebook:
   title: Rubin QA Report
   subtitle: Basic dataset characterization
   last_verified_run: '2026-08-25'
+  introduction: >
+    This notebook provides lightweight statistics and diagnostic plots for quick
+    characterization of the data product.
 
 catalogs:
   - title: Rubin DP1 Object Catalog

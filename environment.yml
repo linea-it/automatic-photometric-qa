@@ -1,0 +1,19 @@
+name: automatic-photometric-qa
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - dask
+  - distributed
+  - dask-jobqueue
+  - ipykernel
+  - ipython
+  - matplotlib
+  - nbclient
+  - nbconvert
+  - nbformat
+  - numpy
+  - pandas
+  - pyarrow
+  - pyyaml
+  - seaborn

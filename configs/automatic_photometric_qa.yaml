@@ -1,9 +1,8 @@
 notebook:
-  title: Rubin DP2 — object_collection/object_lc/dataset
-  subtitle: Basic dataset characterization
+  title: Rubin DP2
+  subtitle: Basic characterization of the release catalogs
   last_verified_run: '2026-08-27'
-  introduction: This notebook provides lightweight statistics and diagnostic plots
-    for quick characterization of the data product.
+  introduction: This notebook provides lightweight statistics and diagnostic plots for quick characterization of the release catalogs.
 catalogs:
 - title: Rubin DP2 Object Catalog
   path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset

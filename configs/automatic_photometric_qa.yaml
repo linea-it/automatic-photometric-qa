@@ -2,9 +2,144 @@ notebook:
   title: Rubin DP2 — object_collection/object_lc/dataset
   subtitle: Basic dataset characterization
   last_verified_run: '2026-08-27'
-catalog:
+catalogs:
+- title: Rubin DP2 Object Catalog
   path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
   parquet_pattern: '*.parquet'
+  basic_statistics:
+    columns:
+    - objectId
+    - coord_ra
+    - coord_dec
+    - refBand
+    - refExtendedness
+    - refSizeExtendedness
+    - detect_isIsolated
+    - detect_fromBlend
+    - detect_isDeblendedModelSource
+    - u_cModelMag
+    - u_cModelMagErr
+    - g_cModelMag
+    - g_cModelMagErr
+    - r_cModelMag
+    - r_cModelMagErr
+    - i_cModelMag
+    - i_cModelMagErr
+    - z_cModelMag
+    - z_cModelMagErr
+    - y_cModelMag
+    - y_cModelMagErr
+    default_first_n: 20
+    max_columns: 100
+  unique_count:
+    column: tract
+    max_unique_values: 10000
+  spatial_distribution:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+    footprints:
+    - path: ../data/footprints/des_round19_footprint.csv
+      label: DES Round 19 footprint
+      color: blue
+      type: regions
+      ra_column: ra_deg
+      dec_column: dec_deg
+      region_column: region_id
+      ring_type_column: ring_type
+      exterior_value: exterior
+      vertex_column: vertex_id
+    - path: ../data/footprints/rubin_dp2_footprint.csv
+      label: Rubin DP2 footprint
+      color: red
+      type: regions
+      ra_column: ra_deg
+      dec_column: dec_deg
+      region_column: region_id
+      ring_type_column: ring_type
+      exterior_value: exterior
+      vertex_column: vertex_id
+    - path: ../data/footprints/rubin_footprint.csv
+      label: Rubin footprint
+      color: orange
+      type: curve
+      ra_column: ra_center
+      dec_column: dec_limit
+      sort_by: ra_center
+  magnitudes:
+    bands:
+    - u
+    - g
+    - r
+    - i
+    - z
+    - y
+    models:
+    - psfMag
+    - kronMag
+    - cModelMag
+    model_labels:
+      psfMag: PSF
+      kronMag: Kron
+      cModelMag: cModel
+    model_colors:
+      psfMag: tab:blue
+      kronMag: tab:orange
+      cModelMag: tab:green
+    histogram:
+      bins: 80
+      range:
+      - 15
+      - 35
+      split_every: 8
+    statistics:
+      range:
+      - -2
+      - 35
+      peak_bin_width: 0.1
+      thresholds: []
+      quantiles:
+      - 0.16
+      - 0.5
+      - 0.84
+      - 0.95
+      split_every: 8
+  magnitude_errors:
+    models:
+    - psfMagErr
+    - kronMagErr
+    - cModelMagErr
+    model_labels:
+      psfMagErr: PSF
+      kronMagErr: Kron
+      cModelMagErr: cModel
+    model_colors:
+      psfMagErr: tab:blue
+      kronMagErr: tab:orange
+      cModelMagErr: tab:green
+    histogram:
+      bins: 80
+      range:
+      - 0
+      - 2
+      split_every: 8
+    statistics:
+      range:
+      - 0
+      - 8
+      peak_bin_width: 0.01
+      thresholds:
+      - 0.1
+      - 0.2
+      quantiles:
+      - 0.16
+      - 0.5
+      - 0.84
+      - 0.95
+      split_every: 8
 cluster:
   type: slurm
   local:
@@ -24,137 +159,3 @@ cluster:
       minimum_jobs: 20
       maximum_jobs: 20
     wait_for_workers: 20
-basic_statistics:
-  columns:
-  - objectId
-  - coord_ra
-  - coord_dec
-  - refBand
-  - refExtendedness
-  - refSizeExtendedness
-  - detect_isIsolated
-  - detect_fromBlend
-  - detect_isDeblendedModelSource
-  - u_cModelMag
-  - u_cModelMagErr
-  - g_cModelMag
-  - g_cModelMagErr
-  - r_cModelMag
-  - r_cModelMagErr
-  - i_cModelMag
-  - i_cModelMagErr
-  - z_cModelMag
-  - z_cModelMagErr
-  - y_cModelMag
-  - y_cModelMagErr
-  default_first_n: 20
-  max_columns: 100
-unique_count:
-  column: tract
-  max_unique_values: 10000
-spatial_distribution:
-  ra_column: coord_ra
-  dec_column: coord_dec
-  ra_edge_count: 180
-  dec_edge_count: 90
-  split_every: 8
-  title_suffix: Spatial Distribution
-  footprints:
-  - path: ../data/footprints/des_round19_footprint.csv
-    label: DES Round 19 footprint
-    color: blue
-    type: regions
-    ra_column: ra_deg
-    dec_column: dec_deg
-    region_column: region_id
-    ring_type_column: ring_type
-    exterior_value: exterior
-    vertex_column: vertex_id
-  - path: ../data/footprints/rubin_dp2_footprint.csv
-    label: Rubin DP2 footprint
-    color: red
-    type: regions
-    ra_column: ra_deg
-    dec_column: dec_deg
-    region_column: region_id
-    ring_type_column: ring_type
-    exterior_value: exterior
-    vertex_column: vertex_id
-  - path: ../data/footprints/rubin_footprint.csv
-    label: Rubin footprint
-    color: orange
-    type: curve
-    ra_column: ra_center
-    dec_column: dec_limit
-    sort_by: ra_center
-magnitudes:
-  bands:
-  - u
-  - g
-  - r
-  - i
-  - z
-  - y
-  models:
-  - psfMag
-  - kronMag
-  - cModelMag
-  model_labels:
-    psfMag: PSF
-    kronMag: Kron
-    cModelMag: cModel
-  model_colors:
-    psfMag: tab:blue
-    kronMag: tab:orange
-    cModelMag: tab:green
-  histogram:
-    bins: 80
-    range:
-    - 15
-    - 35
-    split_every: 8
-  statistics:
-    range:
-    - -2
-    - 35
-    peak_bin_width: 0.1
-    thresholds: []
-    quantiles:
-    - 0.16
-    - 0.5
-    - 0.84
-    - 0.95
-    split_every: 8
-magnitude_errors:
-  models:
-  - psfMagErr
-  - kronMagErr
-  - cModelMagErr
-  model_labels:
-    psfMagErr: PSF
-    kronMagErr: Kron
-    cModelMagErr: cModel
-  model_colors:
-    psfMagErr: tab:blue
-    kronMagErr: tab:orange
-    cModelMagErr: tab:green
-  histogram:
-    bins: 80
-    range:
-    - 0
-    - 2
-    split_every: 8
-  statistics:
-    range:
-    - 0
-    - 8
-    peak_bin_width: 0.01
-    thresholds:
-    - 0.1
-    - 0.2
-    quantiles:
-    - 0.16
-    - 0.5
-    - 0.84
-    - 0.95
-    split_every: 8

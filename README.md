@@ -10,8 +10,9 @@ produce executed HTML reports from the command line.
 .
 ├── configs/
 │   ├── automatic_photometric_qa.yaml              # Production-like LIneA/HPC configuration
-│   ├── automatic_photometric_qa_dp2_local_test.yaml   # DP2 local test configuration
-│   └── automatic_photometric_qa_dp1_local_test.yaml  # DP1 local test configuration
+│   ├── automatic_photometric_qa_dp2_local_test.yaml      # DP2 local test configuration
+│   ├── automatic_photometric_qa_dp1_local_test.yaml      # DP1 local test configuration
+│   └── automatic_photometric_qa_dp1_dp2_local_test.yaml  # Multi-catalog local test configuration
 ├── data/
 │   ├── footprints/                                # Survey footprint curves used in plots
 │   └── sample/                                    # Scrambled parquet sample for local tests
@@ -72,6 +73,14 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
   --hide-code
 ```
 
+Run the combined DP1 + DP2 local test configuration:
+
+```bash
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_dp2_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp1_dp2_local_test_no_code.html \
+  --hide-code
+```
+
 Run the main configuration:
 
 ```bash
@@ -90,28 +99,41 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
-During execution, the CLI prints progress messages for the main QA steps, for
-example:
+During execution, the CLI prints progress messages for the main notebook steps
+and for each configured catalog section. Internal progress markers are not stored
+in the exported HTML.
+
+Example:
 
 ```text
-[12/34] Computing catalog size
-[14/34] Computing total row count
-[25/34] Generating spatial distribution plot
-[31/34] Computing magnitude-error statistics
+[09/10] Rendering configured catalog QA sections
+Starting catalog 1: Rubin DP1 — scrambled local sample
+[Rubin DP1 — scrambled local sample] Computing total row count
+[Rubin DP1 — scrambled local sample] Computing basic statistics
+[Rubin DP1 — scrambled local sample] Generating magnitude histograms
+Starting catalog 2: Rubin DP2 — scrambled local sample
+[Rubin DP2 — scrambled local sample] Computing unique count
 ```
 
 ## Configuration
 
-The YAML file controls the notebook title, catalog input, Dask cluster, selected
-statistics, plots, and survey footprints.
+The YAML file controls the global notebook title, Dask cluster, catalog inputs,
+selected statistics, plots, and survey footprints.
 
-Required YAML sections:
+Required global YAML sections:
 
 - `notebook`: report title, subtitle, and last verified run date.
-- `catalog`: input parquet file or directory.
-- `cluster`: Dask backend configuration.
+- `catalogs`: one or more catalog configurations.
+- `cluster`: Dask backend configuration shared by all catalogs.
 
-Optional YAML sections:
+Each entry in `catalogs` requires:
+
+- `title`: catalog section title rendered as a level-2 heading.
+- `path`: input parquet file or directory.
+- `parquet_pattern`: file pattern used when `path` is a directory. The
+  default is `*.parquet`.
+
+Optional per-catalog sections:
 
 - `basic_statistics`
 - `unique_count`
@@ -119,12 +141,56 @@ Optional YAML sections:
 - `magnitudes`
 - `magnitude_errors`
 
-If an optional section is absent from the YAML, the corresponding notebook
-section is removed before execution and does not appear in the exported HTML.
-The basic product information section always runs: catalog size, total row
-count, total column count, and column names.
+If an optional section is absent from a catalog entry, that section does not
+appear for that catalog. The basic product information section always runs for
+each catalog: catalog size, total row count, total column count, and column names.
+
+The exported report uses this heading hierarchy:
+
+- Level 1: global notebook title beside the logos.
+- Level 2: each catalog title from `catalogs[*].title`.
+- Level 3: per-catalog QA sections, such as basic product information,
+  unique count, spatial distribution, magnitudes, and magnitude errors.
 
 Relative paths in the YAML are resolved relative to the YAML file location.
+
+Minimal multi-catalog structure:
+
+```yaml
+notebook:
+  title: Rubin QA Report
+  subtitle: Basic dataset characterization
+  last_verified_run: '2026-08-25'
+
+catalogs:
+  - title: Rubin DP1 Object Catalog
+    path: ../data/sample/rubin_dp1_1000_sample_scrambled.parquet
+    parquet_pattern: '*.parquet'
+    basic_statistics:
+      columns: null
+      default_first_n: 20
+      max_columns: 100
+    unique_count:
+      column: tract
+      max_unique_values: 10000
+
+  - title: Rubin DP2 Object Catalog
+    path: ../data/sample/rubin_dp2_1000_sample_scrambled.parquet
+    parquet_pattern: '*.parquet'
+    spatial_distribution:
+      ra_column: coord_ra
+      dec_column: coord_dec
+      ra_edge_count: 180
+      dec_edge_count: 90
+      title_suffix: Spatial Distribution
+
+cluster:
+  type: local
+  local:
+    n_workers: 1
+    cores: 1
+    memory: 2GB
+```
 
 ### Basic Statistics Columns
 
@@ -197,6 +263,16 @@ sigma_mag = 2.5 / ln(10) * flux_err / flux
 
 For example, `psfFluxErr` uses `psfFlux` as the matching flux column.
 
+Flux conversion is intentionally lazy and does not run an additional full-catalog
+validation pass. Non-positive, missing, or non-finite flux values are converted
+to `NaN` in the Dask expression and are excluded by the existing finite-value
+filters used by histograms and distribution statistics. The same rule is applied
+to invalid flux or flux-error values in magnitude-error conversion.
+
+The command-line runner suppresses the known non-fatal NumPy/Dask quantile
+warning caused by these invalid values. It does not suppress exceptions,
+tracebacks, missing-column errors, failed Dask tasks, or other fatal failures.
+
 ### Cluster Backends
 
 Local cluster example:
@@ -240,6 +316,7 @@ should be interpreted.
 
 - `configs/automatic_photometric_qa_dp2_local_test.yaml` is intended for quick DP2 local validation.
 - `configs/automatic_photometric_qa_dp1_local_test.yaml` is intended for quick DP1 local validation, including flux-to-magnitude conversion.
+- `configs/automatic_photometric_qa_dp1_dp2_local_test.yaml` is intended for multi-catalog local validation.
 - `configs/automatic_photometric_qa.yaml` mirrors the current LIneA/HPC QA configuration.
 - Generated HTML reports and executed notebooks should be written under
   `outputs/` or `reports/`, which are ignored by Git.

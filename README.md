@@ -81,6 +81,16 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
+During execution, the CLI prints progress messages for the main QA steps, for
+example:
+
+```text
+[12/34] Computing catalog size
+[14/34] Computing total row count
+[25/34] Generating spatial distribution plot
+[31/34] Computing magnitude-error statistics
+```
+
 ## Configuration
 
 The YAML file controls the notebook title, catalog input, Dask cluster, selected

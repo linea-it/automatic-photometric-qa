@@ -29,6 +29,29 @@ PLOT_SECTIONS = {
 }
 
 
+def log_step(message: str) -> None:
+    """Write a progress message to the terminal immediately."""
+
+    print(message, flush=True)
+
+
+class ProgressNotebookClient(NotebookClient):
+    """Notebook client that prints configured QA step names before execution."""
+
+    async def async_execute_cell(self, cell, cell_index, execution_count=None, store_history=True):
+        step = cell.get("metadata", {}).get("qa_step")
+
+        if step:
+            log_step(f"[{cell_index + 1:02d}/{len(self.nb.cells):02d}] {step}")
+
+        return await super().async_execute_cell(
+            cell,
+            cell_index,
+            execution_count=execution_count,
+            store_history=store_history,
+        )
+
+
 def check_runtime_dependencies() -> None:
     """Fail early when the active environment cannot start a notebook kernel."""
 
@@ -142,7 +165,7 @@ def execute_notebook(
     os.environ["AUTOMATIC_PHOTOMETRIC_QA_CONFIG"] = str(config_path)
 
     try:
-        client = NotebookClient(
+        client = ProgressNotebookClient(
             nb,
             timeout=timeout,
             kernel_name=kernel_name,
@@ -183,11 +206,14 @@ def main() -> None:
     output_path = args.output or Path(f"{config_path.stem}.html")
     output_path = output_path.resolve()
 
+    log_step(f"Loading configuration: {config_path}")
     config = load_config(config_path)
     enabled_sections = configured_optional_sections(config)
 
+    log_step(f"Loading notebook template: {notebook_path}")
     nb = nbformat.read(notebook_path, as_version=4)
     filter_notebook(nb, enabled_sections)
+    log_step("Executing notebook")
     execute_notebook(
         nb,
         notebook_path=notebook_path,
@@ -196,13 +222,17 @@ def main() -> None:
         kernel_name=args.kernel_name,
     )
 
+    log_step("Notebook execution finished")
+
     if args.executed_notebook:
         executed_notebook_path = args.executed_notebook.resolve()
         executed_notebook_path.parent.mkdir(parents=True, exist_ok=True)
         nbformat.write(nb, executed_notebook_path)
+        log_step(f"Wrote executed notebook: {executed_notebook_path}")
 
+    log_step(f"Exporting HTML: {output_path}")
     export_html(nb, output_path, hide_code=args.hide_code)
-    print(f"Wrote {output_path}")
+    log_step(f"Wrote HTML report: {output_path}")
 
 
 if __name__ == "__main__":

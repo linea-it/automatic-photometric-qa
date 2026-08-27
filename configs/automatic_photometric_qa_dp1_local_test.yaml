@@ -1,18 +1,18 @@
 notebook:
-  title: Rubin DP2 — object_collection/object_lc/dataset
+  title: Rubin DP1 — scrambled local sample
   subtitle: Basic dataset characterization
-  last_verified_run: '2026-08-27'
+  last_verified_run: '2026-08-25'
 catalog:
-  path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
+  path: ../data/sample/rubin_dp1_1000_sample_scrambled.parquet
   parquet_pattern: '*.parquet'
 cluster:
-  type: slurm
+  type: local
   local:
-    n_workers: 3
-    cores: 2
+    n_workers: 1
+    cores: 1
     memory: 2GB
   slurm:
-    n_workers: 20
+    n_workers: 30
     queue: cpu
     account: hpc-public
     interface: ib0
@@ -21,9 +21,9 @@ cluster:
     memory: 32GB
     walltime: 02:00:00
     adapt:
-      minimum_jobs: 20
-      maximum_jobs: 20
-    wait_for_workers: 20
+      minimum_jobs: 30
+      maximum_jobs: 30
+    wait_for_workers: 30
 basic_statistics:
   columns:
   - objectId
@@ -35,18 +35,18 @@ basic_statistics:
   - detect_isIsolated
   - detect_fromBlend
   - detect_isDeblendedModelSource
-  - u_cModelMag
-  - u_cModelMagErr
-  - g_cModelMag
-  - g_cModelMagErr
-  - r_cModelMag
-  - r_cModelMagErr
-  - i_cModelMag
-  - i_cModelMagErr
-  - z_cModelMag
-  - z_cModelMagErr
-  - y_cModelMag
-  - y_cModelMagErr
+  - u_cModelFlux
+  - u_cModelFluxErr
+  - g_cModelFlux
+  - g_cModelFluxErr
+  - r_cModelFlux
+  - r_cModelFluxErr
+  - i_cModelFlux
+  - i_cModelFluxErr
+  - z_cModelFlux
+  - z_cModelFluxErr
+  - y_cModelFlux
+  - y_cModelFluxErr
   default_first_n: 20
   max_columns: 100
 unique_count:
@@ -96,17 +96,17 @@ magnitudes:
   - z
   - y
   models:
-  - psfMag
-  - kronMag
-  - cModelMag
+  - psfFlux
+  - kronFlux
+  - cModelFlux
   model_labels:
-    psfMag: PSF
-    kronMag: Kron
-    cModelMag: cModel
+    psfFlux: PSF
+    kronFlux: Kron
+    cModelFlux: cModel
   model_colors:
-    psfMag: tab:blue
-    kronMag: tab:orange
-    cModelMag: tab:green
+    psfFlux: tab:blue
+    kronFlux: tab:orange
+    cModelFlux: tab:green
   histogram:
     bins: 80
     range:
@@ -125,19 +125,20 @@ magnitudes:
     - 0.84
     - 0.95
     split_every: 8
+  mag_offset: 31.4
 magnitude_errors:
   models:
-  - psfMagErr
-  - kronMagErr
-  - cModelMagErr
+  - psfFluxErr
+  - kronFluxErr
+  - cModelFluxErr
   model_labels:
-    psfMagErr: PSF
-    kronMagErr: Kron
-    cModelMagErr: cModel
+    psfFluxErr: PSF
+    kronFluxErr: Kron
+    cModelFluxErr: cModel
   model_colors:
-    psfMagErr: tab:blue
-    kronMagErr: tab:orange
-    cModelMagErr: tab:green
+    psfFluxErr: tab:blue
+    kronFluxErr: tab:orange
+    cModelFluxErr: tab:green
   histogram:
     bins: 80
     range:

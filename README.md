@@ -10,7 +10,8 @@ produce executed HTML reports from the command line.
 .
 ├── configs/
 │   ├── automatic_photometric_qa.yaml              # Production-like LIneA/HPC configuration
-│   └── automatic_photometric_qa_local_test.yaml   # Small local test configuration
+│   ├── automatic_photometric_qa_dp2_local_test.yaml   # DP2 local test configuration
+│   └── automatic_photometric_qa_dp1_local_test.yaml  # DP1 local test configuration
 ├── data/
 │   ├── footprints/                                # Survey footprint curves used in plots
 │   └── sample/                                    # Scrambled parquet sample for local tests
@@ -48,18 +49,26 @@ After activating the environment, run the CLI with the active environment's
 
 ## Running a QA Report
 
-Run the local test configuration and export an HTML report with code cells:
+Run the DP2 local test configuration and export an HTML report with code cells:
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_local_test.yaml \
-  --output outputs/automatic_photometric_qa_local_test.html
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp2_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp2_local_test.html
 ```
 
 Export the same report without code cells:
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_local_test.yaml \
-  --output outputs/automatic_photometric_qa_local_test_no_code.html \
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp2_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp2_local_test_no_code.html \
+  --hide-code
+```
+
+Run the DP1 local test configuration, which converts flux columns to magnitudes:
+
+```bash
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp1_local_test_no_code.html \
   --hide-code
 ```
 
@@ -122,8 +131,71 @@ Relative paths in the YAML are resolved relative to the YAML file location.
 `basic_statistics.columns` accepts:
 
 - `null`: use the first `default_first_n` catalog columns. The default is 20.
-- `"all"`: use all catalog columns at the user's own risk.
+- `"all"`: use all catalog columns.
 - A list of column names.
+
+Safeguards are intentionally strict for wide catalogs:
+
+- `columns: "all"` requires `basic_statistics.allow_all_columns: true`.
+- Explicit column lists longer than `basic_statistics.max_columns` fail unless
+  `basic_statistics.allow_many_columns: true` is set.
+- The default `basic_statistics.max_columns` is 100.
+
+These checks prevent accidental large Dask graphs and heavy reductions. If a
+wide run is scientifically required, opt in explicitly in the YAML so the report
+configuration records that choice.
+
+### Exact Unique Counts
+
+`unique_count` always reports an exact global count or fails. It never reports an
+approximate count, sampled count, or per-partition count as if it were global.
+
+Use `unique_count.max_unique_values` to cap the number of unique values that may
+be collected by the driver while computing the exact result:
+
+```yaml
+unique_count:
+  column: tract
+  max_unique_values: 10000
+```
+
+If the exact global cardinality exceeds `max_unique_values`, the run raises an
+error and no count is reported. Increase this limit only when the high-cardinality
+exact count is scientifically required and the driver has enough memory.
+
+### Flux-to-Magnitude Conversion
+
+The `magnitudes` and `magnitude_errors` sections can use either native magnitude
+columns, such as `psfMag`, or flux columns, such as `psfFlux`.
+
+When a configured magnitude model contains `Flux`, the notebook lazily converts
+that Dask column to magnitude values during execution:
+
+```text
+magnitude = mag_offset - 2.5 log10(flux)
+```
+
+In that case, `magnitudes.mag_offset` is required. For example:
+
+```yaml
+magnitudes:
+  bands: [u, g, r, i, z, y]
+  models: [psfFlux, kronFlux, cModelFlux]
+  mag_offset: 31.4
+  model_labels:
+    psfFlux: PSF
+    kronFlux: Kron
+    cModelFlux: cModel
+```
+
+When a configured magnitude-error model contains `FluxErr`, the notebook lazily
+loads the matching flux column and converts the error with:
+
+```text
+sigma_mag = 2.5 / ln(10) * flux_err / flux
+```
+
+For example, `psfFluxErr` uses `psfFlux` as the matching flux column.
 
 ### Cluster Backends
 
@@ -160,13 +232,14 @@ cluster:
 
 ## Test Data
 
-The local test configuration uses
-`data/sample/rubin_dp2_1000_sample_scrambled.parquet`. See
-`data/sample/README.md` for details about how this sample should be interpreted.
+The local test configurations use scrambled DP1 and DP2 parquet samples under
+`data/sample/`. See `data/sample/README.md` for details about how these samples
+should be interpreted.
 
 ## Notes
 
-- `configs/automatic_photometric_qa_local_test.yaml` is intended for quick local validation.
+- `configs/automatic_photometric_qa_dp2_local_test.yaml` is intended for quick DP2 local validation.
+- `configs/automatic_photometric_qa_dp1_local_test.yaml` is intended for quick DP1 local validation, including flux-to-magnitude conversion.
 - `configs/automatic_photometric_qa.yaml` mirrors the current LIneA/HPC QA configuration.
 - Generated HTML reports and executed notebooks should be written under
   `outputs/` or `reports/`, which are ignored by Git.

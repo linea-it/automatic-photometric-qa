@@ -1,5 +1,5 @@
 notebook:
-  title: Rubin DP2 — object_collection/object_lc/dataset
+  title: Rubin DP2 — scrambled local sample
   subtitle: Basic dataset characterization
   last_verified_run: '2026-08-25'
 catalog:
@@ -48,8 +48,10 @@ basic_statistics:
   - y_cModelMag
   - y_cModelMagErr
   default_first_n: 20
+  max_columns: 100
 unique_count:
   column: tract
+  max_unique_values: 10000
 spatial_distribution:
   ra_column: coord_ra
   dec_column: coord_dec

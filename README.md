@@ -126,12 +126,26 @@ Required global YAML sections:
 - `catalogs`: one or more catalog configurations.
 - `cluster`: Dask backend configuration shared by all catalogs.
 
-Each entry in `catalogs` requires:
+Each available catalog entry in `catalogs` requires:
 
 - `title`: catalog section title rendered as a level-2 heading.
 - `path`: input parquet file or directory.
 - `parquet_pattern`: file pattern used when `path` is a directory. The
   default is `*.parquet`.
+
+Catalog entries may also be placeholders for planned data products:
+
+```yaml
+catalogs:
+  - title: Future Object Catalog
+    status: planned
+    markdown: To be done
+```
+
+For planned catalogs, `path` is not required and no data-processing sections are
+run. The notebook renders only the catalog title and the configured markdown.
+Use `status: planned` explicitly so a missing `path` in an available catalog is
+still treated as a configuration error.
 
 Optional per-catalog sections:
 
@@ -191,6 +205,10 @@ catalogs:
       dec_edge_count: 90
       title_suffix: Spatial Distribution
 
+  - title: Future Visit Catalog
+    status: planned
+    markdown: To be done
+
 cluster:
   type: local
   local:
@@ -238,11 +256,13 @@ exact count is scientifically required and the driver has enough memory.
 
 ### Flux-to-Magnitude Conversion
 
-The `magnitudes` and `magnitude_errors` sections can use either native magnitude
-columns, such as `psfMag`, or flux columns, such as `psfFlux`.
+The `magnitudes` and `magnitude_errors` sections can mix native magnitude
+columns, such as `psfMag`, with flux columns, such as `gaap1p0Flux` or
+`psfFlux`.
 
 When a configured magnitude model contains `Flux`, the notebook lazily converts
-that Dask column to magnitude values during execution:
+that Dask column to magnitude values during execution. Models that already use
+`Mag` are read directly without conversion:
 
 ```text
 magnitude = mag_offset - 2.5 log10(flux)

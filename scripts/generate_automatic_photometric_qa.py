@@ -161,8 +161,20 @@ def load_config(config_path: Path) -> dict:
             if not isinstance(catalog_config, dict):
                 raise ValueError(f"catalogs[{catalog_index}] must be a YAML mapping.")
 
-            if "path" not in catalog_config:
-                raise ValueError(f"catalogs[{catalog_index}] is missing required key: path")
+            status = catalog_config.get("status", "available")
+
+            if status not in {"available", "planned"}:
+                raise ValueError(
+                    f"catalogs[{catalog_index}].status must be either 'available' "
+                    f"or 'planned', got: {status!r}"
+                )
+
+            if status == "available" and "path" not in catalog_config:
+                raise ValueError(
+                    f"catalogs[{catalog_index}] is available and is missing "
+                    "required key: path. Use status: planned for placeholder "
+                    "catalog sections without data files."
+                )
 
     return config
 

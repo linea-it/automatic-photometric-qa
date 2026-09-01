@@ -1,12 +1,12 @@
 notebook:
-  title: Rubin DP2
-  subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-08-27'
+  title: Rubin DP2 — scrambled local sample
+  subtitle: Basic dataset characterization
+  last_verified_run: '2026-08-25'
   introduction: This notebook provides lightweight statistics and diagnostic plots
-    for quick characterization of the release catalogs.
+    for quick characterization of the data product.
 catalogs:
-- title: Rubin DP2 Object Catalog
-  path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
+- title: Rubin DP2 — scrambled local sample
+  path: ../data/sample/rubin_dp2_1000_sample_scrambled.parquet
   parquet_pattern: '*.parquet'
   basic_statistics:
     columns:
@@ -150,13 +150,13 @@ catalogs:
       - 0.95
       split_every: 8
 cluster:
-  type: slurm
+  type: local
   local:
-    n_workers: 3
-    cores: 2
+    n_workers: 1
+    cores: 1
     memory: 2GB
   slurm:
-    n_workers: 20
+    n_workers: 30
     queue: cpu
     account: hpc-public
     interface: ib0
@@ -165,6 +165,6 @@ cluster:
     memory: 32GB
     walltime: 02:00:00
     adapt:
-      minimum_jobs: 20
-      maximum_jobs: 20
-    wait_for_workers: 20
+      minimum_jobs: 30
+      maximum_jobs: 30
+    wait_for_workers: 30

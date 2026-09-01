@@ -5,7 +5,7 @@ notebook:
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
-- title: Rubin DP2 Object Catalog
+- title: object
   path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
   parquet_pattern: '*.parquet'
   basic_statistics:
@@ -149,6 +149,36 @@ catalogs:
       - 0.84
       - 0.95
       split_every: 8
+- title: object_shear_all
+  status: planned
+  markdown: To be done
+- title: object_scarlet_models
+  status: planned
+  markdown: To be done
+- title: isolated_star_stellar_motions
+  status: planned
+  markdown: To be done
+- title: source
+  status: planned
+  markdown: To be done
+- title: object_forced_source
+  status: planned
+  markdown: To be done
+- title: dia_object
+  status: planned
+  markdown: To be done
+- title: dia_source
+  status: planned
+  markdown: To be done
+- title: dia_object_forced_source
+  status: planned
+  markdown: To be done
+- title: ss_object
+  status: planned
+  markdown: To be done
+- title: ss_source
+  status: planned
+  markdown: To be done
 cluster:
   type: slurm
   local:

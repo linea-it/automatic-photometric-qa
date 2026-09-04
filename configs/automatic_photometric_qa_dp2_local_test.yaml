@@ -71,6 +71,12 @@ catalogs:
       ra_column: ra_center
       dec_column: dec_limit
       sort_by: ra_center
+  survey_area:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    order: 12
+    split_every: 8
+    split_out: 8
   magnitudes:
     bands:
     - u

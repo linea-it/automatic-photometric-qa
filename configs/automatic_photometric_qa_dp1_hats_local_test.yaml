@@ -42,6 +42,12 @@ catalogs:
     dec_edge_count: 90
     split_every: 8
     title_suffix: Spatial Distribution
+  survey_area:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    order: 12
+    split_every: 8
+    split_out: 8
   magnitudes:
     bands:
     - u

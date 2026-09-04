@@ -160,6 +160,7 @@ Optional per-catalog sections:
 - `basic_statistics`
 - `unique_count`
 - `spatial_distribution`
+- `survey_area`
 - `magnitudes`
 - `magnitude_errors`
 - `plot_pixels` (HATS only)
@@ -220,6 +221,11 @@ catalogs:
       ra_edge_count: 180
       dec_edge_count: 90
       title_suffix: Spatial Distribution
+    survey_area:
+      ra_column: coord_ra
+      dec_column: coord_dec
+      order: 12
+      split_out: 64
 
   - title: Future Visit Catalog
     status: planned
@@ -269,6 +275,41 @@ unique_count:
 If the exact global cardinality exceeds `max_unique_values`, the run raises an
 error and no count is reported. Increase this limit only when the high-cardinality
 exact count is scientifically required and the driver has enough memory.
+
+### Survey Area and Object Density
+
+`survey_area` estimates the sky area covered by a catalog from occupied HEALPix
+pixels and reports the mean object density as total rows divided by that area.
+The section is opt-in: omit it or set it to `false` to skip the calculation.
+
+```yaml
+survey_area:
+  ra_column: coord_ra
+  dec_column: coord_dec
+  order: 12
+  split_every: 8
+  split_out: 64
+```
+
+`order` defaults to 12 when the section is enabled. If `ra_column` or
+`dec_column` is omitted, the notebook reuses the matching
+`spatial_distribution` coordinate setting when available, otherwise it falls
+back to `coord_ra` and `coord_dec`.
+
+The calculation reads only the coordinate columns. Each Dask partition converts
+coordinates to HEALPix pixels and deduplicates locally; the global unique-pixel
+count is then computed with a distributed Dask `drop_duplicates`, controlled by
+`split_out`, `split_every`, and optional `shuffle_method`. Raising `split_out`
+can improve parallelism for large footprints at the cost of more shuffle tasks.
+
+For HATS inputs, the notebook automatically prefers the catalog's existing
+HEALPix column from `hats.properties`, such as `_healpix_29`, when its order is
+at least as fine as `survey_area.order`. In that case, each partition only
+degrades the existing pixel IDs to the configured order before deduplication,
+which avoids a full RA/Dec-to-HEALPix conversion pass. Set
+`survey_area.use_hats_healpix_column: false` to force the coordinate-based path,
+or provide `healpix_column` and `healpix_column_order` explicitly for another
+precomputed HEALPix column.
 
 ### Flux-to-Magnitude Conversion
 

@@ -149,6 +149,28 @@ catalogs:
       - 0.84
       - 0.95
       split_every: 8
+  magnitude_error_trends:
+    bands:
+    - u
+    - g
+    - r
+    - i
+    - z
+    - y
+    ncols: 2
+    bins: 50
+    magnitude_range:
+    - 15
+    - 35
+    error_range:
+    - 0
+    - 2
+    dispersion_quantiles:
+    - 0.16
+    - 0.84
+    min_count: 1
+    fill_alpha: 0.15
+    split_every: 8
 cluster:
   type: local
   local:

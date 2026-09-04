@@ -163,6 +163,7 @@ Optional per-catalog sections:
 - `survey_area`
 - `magnitudes`
 - `magnitude_errors`
+- `magnitude_error_trends`
 - `plot_pixels` (HATS only)
 - `plot_coverage` (HATS only)
 
@@ -352,6 +353,36 @@ validation pass. Non-positive, missing, or non-finite flux values are converted
 to `NaN` in the Dask expression and are excluded by the existing finite-value
 filters used by histograms and distribution statistics. The same rule is applied
 to invalid flux or flux-error values in magnitude-error conversion.
+
+### Magnitude-Error Trends
+
+The optional `magnitude_error_trends` section renders magnitude versus
+magnitude-error trend plots for configured bands, with two plots per row by
+default. It uses all configured
+`magnitudes.models` by default and infers matching error models by appending
+`Err`, for example `psfMag` to `psfMagErr` and `gaap1p0Flux` to
+`gaap1p0FluxErr`.
+
+The plot computes a 2D histogram per model and magnitude bin. The line is the
+binned mean magnitude error, and the shaded region is the configured approximate
+quantile range measured from the binned error distribution.
+
+```yaml
+magnitude_error_trends:
+  bands: [u, g, r, i, z, y]
+  ncols: 2
+  bins: 50
+  magnitude_range: [15, 35]
+  error_range: [0, 2]
+  dispersion_quantiles: [0.16, 0.84]
+  min_count: 1
+  fill_alpha: 0.15
+  split_every: 8
+```
+
+Set `models` and `error_models` explicitly when the magnitude and error model
+names do not follow the default `Err` suffix convention. Both lists must have
+the same length. Use `band` instead of `bands` to render a single-band plot.
 
 The command-line runner suppresses the known non-fatal NumPy/Dask quantile
 warning caused by these invalid values. It does not suppress exceptions,

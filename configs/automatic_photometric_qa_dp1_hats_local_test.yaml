@@ -35,6 +35,7 @@ catalogs:
   unique_count:
     column: tract
     max_unique_values: 10000
+    list_values: true
   spatial_distribution:
     ra_column: coord_ra
     dec_column: coord_dec

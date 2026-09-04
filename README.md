@@ -271,11 +271,17 @@ be collected by the driver while computing the exact result:
 unique_count:
   column: tract
   max_unique_values: 10000
+  list_values: true
+  list_rows: 10
 ```
 
 If the exact global cardinality exceeds `max_unique_values`, the run raises an
 error and no count is reported. Increase this limit only when the high-cardinality
 exact count is scientifically required and the driver has enough memory.
+
+Set `unique_count.list_values: true` to render the exact unique values in a
+scrollable HTML text box below the count. The optional `unique_count.list_rows`
+setting controls the visible height of that box.
 
 ### Survey Area and Object Density
 

@@ -8,6 +8,7 @@ dependencies:
   - dask-jobqueue
   - ipykernel
   - ipython
+  - lsdb
   - matplotlib
   - nbclient
   - nbconvert

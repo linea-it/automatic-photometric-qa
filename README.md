@@ -42,7 +42,7 @@ conda install -c conda-forge \
   dask distributed dask-jobqueue \
   pandas numpy matplotlib seaborn \
   pyyaml ipython ipykernel nbclient nbconvert nbformat \
-  pyarrow
+  pyarrow lsdb
 ```
 
 After activating the environment, run the CLI with the active environment's
@@ -78,6 +78,14 @@ Run the combined DP1 + DP2 local test configuration:
 ```bash
 python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_dp2_local_test.yaml \
   --output outputs/automatic_photometric_qa_dp1_dp2_local_test_no_code.html \
+  --hide-code
+```
+
+Run the DP1 HATS local test configuration:
+
+```bash
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_hats_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp1_hats_local_test_no_code.html \
   --hide-code
 ```
 
@@ -154,10 +162,18 @@ Optional per-catalog sections:
 - `spatial_distribution`
 - `magnitudes`
 - `magnitude_errors`
+- `plot_pixels` (HATS only)
+- `plot_coverage` (HATS only)
 
 If an optional section is absent from a catalog entry, that section does not
 appear for that catalog. The basic product information section always runs for
 each catalog: catalog size, total row count, total column count, and column names.
+
+Catalog paths that contain `collection.properties` or `hats.properties` are
+treated as HATS catalogs. HATS inputs are opened with
+`lsdb.open_catalog(path, columns="all")`, then converted to a Dask DataFrame for
+the existing QA sections. Non-HATS inputs continue to be read directly with
+`dask.dataframe.read_parquet`.
 
 The exported report uses this heading hierarchy:
 
@@ -299,6 +315,27 @@ to invalid flux or flux-error values in magnitude-error conversion.
 The command-line runner suppresses the known non-fatal NumPy/Dask quantile
 warning caused by these invalid values. It does not suppress exceptions,
 tracebacks, missing-column errors, failed Dask tasks, or other fatal failures.
+
+### HATS Plots
+
+For HATS catalog inputs, two optional sections can render additional LSDB maps:
+
+- `Catalog.plot_pixels(projection="MOL")`
+- `Catalog.plot_coverage()`
+
+These sections are opt-in. If `plot_pixels` or `plot_coverage` is absent, that
+map is not rendered. Optional keyword arguments can be passed through the YAML:
+
+```yaml
+plot_pixels:
+  projection: MOL
+plot_coverage: {}
+```
+
+Set either section to `false` or omit it to skip that plot for a HATS catalog.
+If either section is configured for a non-HATS parquet input, the run fails with
+a configuration error. A section value of `true`, `null`, or `{}` renders the
+plot with default LSDB arguments.
 
 ### Cluster Backends
 

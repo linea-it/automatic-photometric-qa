@@ -1,0 +1,18 @@
+#HATS catalog
+obs_collection=margin_10arcs
+dataproduct_type=margin
+hats_nrows=0
+hats_col_ra=coord_ra
+hats_col_dec=coord_dec
+hats_col_healpix=_healpix_29
+hats_col_healpix_order=29
+hats_primary_table_url=/scratch/users/luigi.silva/science_catalogs/data/rubin_dp1_1000_sample_scrambled_hats/catalog
+hats_margin_threshold=10.0
+hats_npix_suffix=.parquet
+hats_estsize=265
+moc_sky_fraction=0.0
+hats_order=1
+hats_builder=hats-import v0.10.4, hats v0.10.4
+hats_creation_date=2026-09-04T14:21UTC
+hats_release_date=2025-08-22
+hats_version=v1.0

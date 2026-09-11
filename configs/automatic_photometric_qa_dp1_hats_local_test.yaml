@@ -6,6 +6,7 @@ notebook:
     for quick characterization of the data product.
 catalogs:
 - title: Rubin DP1 - scrambled local HATS sample
+  omit_paths: true
   path: ../data/sample/rubin_dp1_1000_sample_scrambled_hats
   basic_statistics:
     columns:

@@ -6,7 +6,8 @@ notebook:
     for quick characterization of the release catalogs.
 catalogs:
 - title: Rubin DP2 Object Catalog
-  path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
+  omit_paths: true
+  path: <path-to-lsst>/dp2/secondary/catalogs/object_collection/object_lc/dataset
   parquet_pattern: '*.parquet'
   basic_statistics:
     columns:

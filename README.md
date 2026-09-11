@@ -140,12 +140,15 @@ Each available catalog entry in `catalogs` requires:
 - `path`: input parquet file or directory.
 - `parquet_pattern`: file pattern used when `path` is a directory. The
   default is `*.parquet`.
+- `omit_paths`: when `true`, the catalog path is not included in the rendered
+  report. It defaults to `false` for backward compatibility.
 
 Catalog entries may also be placeholders for planned data products:
 
 ```yaml
 catalogs:
   - title: Future Object Catalog
+    omit_paths: true
     status: planned
     markdown: To be done
 ```

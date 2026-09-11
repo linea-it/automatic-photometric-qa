@@ -6,6 +6,7 @@ notebook:
     for quick characterization of the data product.
 catalogs:
 - title: Rubin DP2 — scrambled local sample
+  omit_paths: true
   path: ../data/sample/rubin_dp2_1000_sample_scrambled.parquet
   parquet_pattern: '*.parquet'
   basic_statistics:

@@ -42,7 +42,7 @@ conda install -c conda-forge \
   dask distributed dask-jobqueue \
   pandas numpy matplotlib seaborn \
   pyyaml ipython ipykernel nbclient nbconvert nbformat \
-  pyarrow
+  pyarrow lsdb
 ```
 
 After activating the environment, run the CLI with the active environment's
@@ -78,6 +78,14 @@ Run the combined DP1 + DP2 local test configuration:
 ```bash
 python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_dp2_local_test.yaml \
   --output outputs/automatic_photometric_qa_dp1_dp2_local_test_no_code.html \
+  --hide-code
+```
+
+Run the DP1 HATS local test configuration:
+
+```bash
+python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa_dp1_hats_local_test.yaml \
+  --output outputs/automatic_photometric_qa_dp1_hats_local_test_no_code.html \
   --hide-code
 ```
 
@@ -152,12 +160,22 @@ Optional per-catalog sections:
 - `basic_statistics`
 - `unique_count`
 - `spatial_distribution`
+- `survey_area`
 - `magnitudes`
 - `magnitude_errors`
+- `magnitude_error_trends`
+- `plot_pixels` (HATS only)
+- `plot_coverage` (HATS only)
 
 If an optional section is absent from a catalog entry, that section does not
 appear for that catalog. The basic product information section always runs for
 each catalog: catalog size, total row count, total column count, and column names.
+
+Catalog paths that contain `collection.properties` or `hats.properties` are
+treated as HATS catalogs. HATS inputs are opened with
+`lsdb.open_catalog(path, columns="all")`, then converted to a Dask DataFrame for
+the existing QA sections. Non-HATS inputs continue to be read directly with
+`dask.dataframe.read_parquet`.
 
 The exported report uses this heading hierarchy:
 
@@ -204,6 +222,11 @@ catalogs:
       ra_edge_count: 180
       dec_edge_count: 90
       title_suffix: Spatial Distribution
+    survey_area:
+      ra_column: coord_ra
+      dec_column: coord_dec
+      order: 12
+      split_out: 64
 
   - title: Future Visit Catalog
     status: planned
@@ -248,11 +271,52 @@ be collected by the driver while computing the exact result:
 unique_count:
   column: tract
   max_unique_values: 10000
+  list_values: true
+  list_rows: 10
 ```
 
 If the exact global cardinality exceeds `max_unique_values`, the run raises an
 error and no count is reported. Increase this limit only when the high-cardinality
 exact count is scientifically required and the driver has enough memory.
+
+Set `unique_count.list_values: true` to render the exact unique values in a
+scrollable HTML text box below the count. The optional `unique_count.list_rows`
+setting controls the visible height of that box.
+
+### Survey Area and Object Density
+
+`survey_area` estimates the sky area covered by a catalog from occupied HEALPix
+pixels and reports the mean object density as total rows divided by that area.
+The section is opt-in: omit it or set it to `false` to skip the calculation.
+
+```yaml
+survey_area:
+  ra_column: coord_ra
+  dec_column: coord_dec
+  order: 12
+  split_every: 8
+  split_out: 64
+```
+
+`order` defaults to 12 when the section is enabled. If `ra_column` or
+`dec_column` is omitted, the notebook reuses the matching
+`spatial_distribution` coordinate setting when available, otherwise it falls
+back to `coord_ra` and `coord_dec`.
+
+The calculation reads only the coordinate columns. Each Dask partition converts
+coordinates to HEALPix pixels and deduplicates locally; the global unique-pixel
+count is then computed with a distributed Dask `drop_duplicates`, controlled by
+`split_out`, `split_every`, and optional `shuffle_method`. Raising `split_out`
+can improve parallelism for large footprints at the cost of more shuffle tasks.
+
+For HATS inputs, the notebook automatically prefers the catalog's existing
+HEALPix column from `hats.properties`, such as `_healpix_29`, when its order is
+at least as fine as `survey_area.order`. In that case, each partition only
+degrades the existing pixel IDs to the configured order before deduplication,
+which avoids a full RA/Dec-to-HEALPix conversion pass. Set
+`survey_area.use_hats_healpix_column: false` to force the coordinate-based path,
+or provide `healpix_column` and `healpix_column_order` explicitly for another
+precomputed HEALPix column.
 
 ### Flux-to-Magnitude Conversion
 
@@ -296,9 +360,60 @@ to `NaN` in the Dask expression and are excluded by the existing finite-value
 filters used by histograms and distribution statistics. The same rule is applied
 to invalid flux or flux-error values in magnitude-error conversion.
 
+### Magnitude-Error Trends
+
+The optional `magnitude_error_trends` section renders magnitude versus
+magnitude-error trend plots for configured bands, with two plots per row by
+default. It uses all configured
+`magnitudes.models` by default and infers matching error models by appending
+`Err`, for example `psfMag` to `psfMagErr` and `gaap1p0Flux` to
+`gaap1p0FluxErr`.
+
+The plot computes a 2D histogram per model and magnitude bin. The line is the
+binned mean magnitude error, and the shaded region is the configured approximate
+quantile range measured from the binned error distribution.
+
+```yaml
+magnitude_error_trends:
+  bands: [u, g, r, i, z, y]
+  ncols: 2
+  bins: 50
+  magnitude_range: [15, 35]
+  error_range: [0, 2]
+  dispersion_quantiles: [0.16, 0.84]
+  min_count: 1
+  fill_alpha: 0.15
+  split_every: 8
+```
+
+Set `models` and `error_models` explicitly when the magnitude and error model
+names do not follow the default `Err` suffix convention. Both lists must have
+the same length. Use `band` instead of `bands` to render a single-band plot.
+
 The command-line runner suppresses the known non-fatal NumPy/Dask quantile
 warning caused by these invalid values. It does not suppress exceptions,
 tracebacks, missing-column errors, failed Dask tasks, or other fatal failures.
+
+### HATS Plots
+
+For HATS catalog inputs, two optional sections can render additional LSDB maps:
+
+- `Catalog.plot_pixels(projection="MOL")`
+- `Catalog.plot_coverage()`
+
+These sections are opt-in. If `plot_pixels` or `plot_coverage` is absent, that
+map is not rendered. Optional keyword arguments can be passed through the YAML:
+
+```yaml
+plot_pixels:
+  projection: MOL
+plot_coverage: {}
+```
+
+Set either section to `false` or omit it to skip that plot for a HATS catalog.
+If either section is configured for a non-HATS parquet input, the run fails with
+a configuration error. A section value of `true`, `null`, or `{}` renders the
+plot with default LSDB arguments.
 
 ### Cluster Backends
 

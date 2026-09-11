@@ -36,6 +36,7 @@ catalogs:
   unique_count:
     column: tract
     max_unique_values: 10000
+    list_values: true
   spatial_distribution:
     ra_column: coord_ra
     dec_column: coord_dec
@@ -61,6 +62,12 @@ catalogs:
       ra_column: ra_center
       dec_column: dec_limit
       sort_by: ra_center
+  survey_area:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    order: 12
+    split_every: 8
+    split_out: 64
   magnitudes:
     bands:
     - u
@@ -139,6 +146,28 @@ catalogs:
       - 0.84
       - 0.95
       split_every: 8
+  magnitude_error_trends:
+    bands:
+    - u
+    - g
+    - r
+    - i
+    - z
+    - y
+    ncols: 2
+    bins: 50
+    magnitude_range:
+    - 15
+    - 35
+    error_range:
+    - 0
+    - 2
+    dispersion_quantiles:
+    - 0.16
+    - 0.84
+    min_count: 1
+    fill_alpha: 0.15
+    split_every: 8
 - title: ss_object
   path: /data/cl/lsst/dp1/primary/catalogs/ss_object
   parquet_pattern: '*.parq'

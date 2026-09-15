@@ -169,6 +169,14 @@ def load_config(config_path: Path) -> dict:
                     f"or 'planned', got: {status!r}"
                 )
 
+            omit_paths = catalog_config.get("omit_paths", False)
+
+            if not isinstance(omit_paths, bool):
+                raise ValueError(
+                    f"catalogs[{catalog_index}].omit_paths must be true or false, "
+                    f"got: {omit_paths!r}"
+                )
+
             if status == "available" and "path" not in catalog_config:
                 raise ValueError(
                     f"catalogs[{catalog_index}] is available and is missing "

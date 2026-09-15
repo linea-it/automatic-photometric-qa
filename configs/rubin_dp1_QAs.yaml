@@ -6,7 +6,8 @@ notebook:
     for quick characterization of the release catalogs.
 catalogs:
 - title: object
-  path: /data/cl/lsst/dp1/primary/catalogs/object
+  omit_paths: true
+  path: <path-to-lsst>/dp1/primary/catalogs/object
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -169,7 +170,8 @@ catalogs:
     fill_alpha: 0.15
     split_every: 8
 - title: ss_object
-  path: /data/cl/lsst/dp1/primary/catalogs/ss_object
+  omit_paths: true
+  path: <path-to-lsst>/dp1/primary/catalogs/ss_object
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -179,7 +181,8 @@ catalogs:
     default_first_n: 20
     max_columns: 100
 - title: ss_source
-  path: /data/cl/lsst/dp1/primary/catalogs/ss_source
+  omit_paths: true
+  path: <path-to-lsst>/dp1/primary/catalogs/ss_source
   parquet_pattern: '*.parq'
   basic_statistics:
     columns: ['phaseAngle', 'heliocentricDist', 'topocentricDist', 'heliocentricX', 'heliocentricY', 'heliocentricZ', 'heliocentricVX', 'heliocentricVY', 'heliocentricVZ', 'topocentricX', 'topocentricY', 'topocentricZ', 'topocentricVX', 'topocentricVY', 'topocentricVZ', 'ssObjectId', 'residualRa', 'residualDec', 'diaSourceId', 'galacticL', 'galacticB', 'eclipticLambda', 'eclipticBeta']

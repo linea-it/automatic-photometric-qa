@@ -6,7 +6,8 @@ notebook:
     for quick characterization of the release catalogs.
 catalogs:
 - title: object
-  path: /data/cl/lsst/dp2/secondary/catalogs/object_collection/object_lc/dataset
+  omit_paths: true
+  path: <path-to-lsst>/dp2/secondary/catalogs/object_collection/object_lc/dataset
   parquet_pattern: '*.parquet'
   basic_statistics:
     columns:
@@ -179,33 +180,43 @@ catalogs:
     fill_alpha: 0.15
     split_every: 8
 - title: object_shear_all
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: object_scarlet_models
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: isolated_star_stellar_motions
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: source
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: object_forced_source
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: dia_object
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: dia_source
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: dia_object_forced_source
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: ss_object
+  omit_paths: true
   status: planned
   markdown: To be done
 - title: ss_source
+  omit_paths: true
   status: planned
   markdown: To be done
 cluster:

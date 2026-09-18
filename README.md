@@ -374,6 +374,17 @@ to `NaN` in the Dask expression and are excluded by the existing finite-value
 filters used by histograms and distribution statistics. The same rule is applied
 to invalid flux or flux-error values in magnitude-error conversion.
 
+For HATS catalogs, magnitude and magnitude-error statistics estimate configured
+quantiles from the same fixed-bin histogram used for the other statistics. This
+avoids a second read and a separate distributed quantile calculation for each
+band and model. Count, mean, threshold fractions, and out-of-range counts still
+come directly from the values. Quantile resolution is set by
+`statistics.peak_bin_width` (0.1 mag and 0.01 mag error in the production YAML).
+The report marks these estimates with `≈` and rounds them to the bin width.
+Non-HATS catalogs keep the existing Dask quantile calculation. To request it
+for a HATS section as well, set `quantile_method: dask` under that section's
+`statistics` mapping; `quantile_method: histogram` is also available explicitly.
+
 ### Magnitude-Error Trends
 
 The optional `magnitude_error_trends` section renders magnitude versus

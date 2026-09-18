@@ -9,7 +9,7 @@ produce executed HTML reports from the command line.
 ```text
 .
 ├── configs/
-│   ├── automatic_photometric_qa.yaml              # Production-like LIneA/HPC configuration
+│   ├── production/                                 # DP1 and DP2 Parquet/HATS configurations
 │   ├── automatic_photometric_qa_dp2_local_test.yaml      # DP2 local test configuration
 │   ├── automatic_photometric_qa_dp1_local_test.yaml      # DP1 local test configuration
 │   └── automatic_photometric_qa_dp1_dp2_local_test.yaml  # Multi-catalog local test configuration
@@ -89,17 +89,17 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
   --hide-code
 ```
 
-Run the main configuration:
+Run a production configuration from the repository root (DP2 HATS example):
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html
 ```
 
 Optionally save the executed notebook used to generate the HTML:
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html \
   --executed-notebook outputs/automatic_photometric_qa_executed.ipynb
 ```
@@ -494,6 +494,6 @@ should be interpreted.
 - `configs/automatic_photometric_qa_dp2_local_test.yaml` is intended for quick DP2 local validation.
 - `configs/automatic_photometric_qa_dp1_local_test.yaml` is intended for quick DP1 local validation, including flux-to-magnitude conversion.
 - `configs/automatic_photometric_qa_dp1_dp2_local_test.yaml` is intended for multi-catalog local validation.
-- `configs/automatic_photometric_qa.yaml` mirrors the current LIneA/HPC QA configuration.
+- `configs/production/` contains the current LIneA/HPC DP1 and DP2 configurations.
 - Generated HTML reports and executed notebooks should be written under
   `outputs/` or `reports/`, which are ignored by Git.

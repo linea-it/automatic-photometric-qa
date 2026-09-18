@@ -1,14 +1,13 @@
 notebook:
-  title: Rubin DP2
+  title: Rubin DP2 - HATS
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-08-27'
+  last_verified_run: '2026-09-18'
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
 - title: object
   omit_paths: true
-  path: <path-to-lsst>/dp2/secondary/catalogs/object_collection/object_lc/dataset
-  parquet_pattern: '*.parquet'
+  path: <full-path-to-hats-collection-folder>
   basic_statistics:
     columns:
     - objectId
@@ -46,7 +45,7 @@ catalogs:
     split_every: 8
     title_suffix: Spatial Distribution
     footprints:
-    - path: ../data/footprints/des_round19_footprint.csv
+    - path: <full-path-to-footprint-data>/des_round19_footprint.csv
       label: DES Round 19 footprint
       color: blue
       type: regions
@@ -56,7 +55,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: ../data/footprints/rubin_dp2_footprint.csv
+    - path: <full-path-to-footprint-data>/rubin_dp2_footprint.csv
       label: Rubin DP2 footprint
       color: red
       type: regions
@@ -66,7 +65,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: ../data/footprints/rubin_footprint.csv
+    - path: <full-path-to-footprint-data>/rubin_footprint.csv
       label: Rubin footprint
       color: orange
       type: curve
@@ -179,6 +178,9 @@ catalogs:
     min_count: 1
     fill_alpha: 0.15
     split_every: 8
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
 - title: object_shear_all
   omit_paths: true
   status: planned
@@ -226,15 +228,15 @@ cluster:
     cores: 2
     memory: 2GB
   slurm:
-    n_workers: 20
-    queue: cpu
-    account: hpc-public
+    n_workers: 28
+    queue: cpu_pipelines
+    account: hpc-pipelines
     interface: ib0
-    cores: 2
+    cores: 4
     processes: 1
-    memory: 32GB
+    memory: 24GB
     walltime: 02:00:00
     adapt:
-      minimum_jobs: 20
-      maximum_jobs: 20
-    wait_for_workers: 20
+      minimum_jobs: 28
+      maximum_jobs: 28
+    wait_for_workers: 28

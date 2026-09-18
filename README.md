@@ -273,8 +273,9 @@ configuration records that choice.
 `unique_count` always reports an exact global count or fails. It never reports an
 approximate count, sampled count, or per-partition count as if it were global.
 
-Use `unique_count.max_unique_values` to cap the number of unique values that may
-be collected by the driver while computing the exact result:
+Use `unique_count.max_unique_values` to cap the unique values retained at each
+partition and merge step. Partial sets are merged on workers, so the driver
+receives at most `max_unique_values + 1` values:
 
 ```yaml
 unique_count:
@@ -285,8 +286,8 @@ unique_count:
 ```
 
 If the exact global cardinality exceeds `max_unique_values`, the run raises an
-error and no count is reported. Increase this limit only when the high-cardinality
-exact count is scientifically required and the driver has enough memory.
+error and no count is reported. The count still scans the selected column across
+all catalog partitions, so it can take time for a very large catalog.
 
 Set `unique_count.list_values: true` to render the exact unique values in a
 scrollable HTML text box below the count. The optional `unique_count.list_rows`

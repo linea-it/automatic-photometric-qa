@@ -176,10 +176,11 @@ each catalog: catalog size, total row count, total column count, and column name
 
 Catalog paths that contain `collection.properties` or `hats.properties` are
 treated as HATS catalogs. The primary table is opened with
-`lsdb.open_catalog(primary_catalog_path, columns="all")`, without loading a
-collection's margin cache. The QA sections select only their
-required columns and use LSDB partition operations for counts, area, histograms,
-and magnitude diagnostics. The basic statistics section converts its selected
+`lsdb.open_catalog(primary_catalog_path, columns="all")` to inspect its schema,
+without loading a collection's margin cache. Each QA section opens the same
+primary table with `columns=[...]` so Parquet reads include only its required
+columns. The sections use LSDB partition operations for counts, area,
+histograms, and magnitude diagnostics. The basic statistics section converts its selected
 columns to a Dask DataFrame for `describe()`. The HATS metadata supplies the
 total row count without reading catalog rows. Non-HATS inputs continue to be
 read directly with `dask.dataframe.read_parquet`. Both inputs use the same YAML

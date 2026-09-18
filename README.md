@@ -9,7 +9,7 @@ produce executed HTML reports from the command line.
 ```text
 .
 ├── configs/
-│   ├── automatic_photometric_qa.yaml              # Production-like LIneA/HPC configuration
+│   ├── production/                                 # DP1 and DP2 Parquet/HATS configurations
 │   ├── automatic_photometric_qa_dp2_local_test.yaml      # DP2 local test configuration
 │   ├── automatic_photometric_qa_dp1_local_test.yaml      # DP1 local test configuration
 │   └── automatic_photometric_qa_dp1_dp2_local_test.yaml  # Multi-catalog local test configuration
@@ -89,17 +89,17 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
   --hide-code
 ```
 
-Run the main configuration:
+Run a production configuration from the repository root (DP2 HATS example):
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html
 ```
 
 Optionally save the executed notebook used to generate the HTML:
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/automatic_photometric_qa.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html \
   --executed-notebook outputs/automatic_photometric_qa_executed.ipynb
 ```
@@ -175,10 +175,24 @@ appear for that catalog. The basic product information section always runs for
 each catalog: catalog size, total row count, total column count, and column names.
 
 Catalog paths that contain `collection.properties` or `hats.properties` are
-treated as HATS catalogs. HATS inputs are opened with
-`lsdb.open_catalog(path, columns="all")`, then converted to a Dask DataFrame for
-the existing QA sections. Non-HATS inputs continue to be read directly with
-`dask.dataframe.read_parquet`.
+treated as HATS catalogs. The primary table is opened with
+`lsdb.open_catalog(primary_catalog_path, columns="all")` to inspect its schema,
+without loading a collection's margin cache. Each QA section opens the same
+primary table with `columns=[...]` so Parquet reads include only its required
+columns. The sections use LSDB partition operations for counts, area,
+histograms, and magnitude diagnostics. For HATS, `basic_statistics` uses
+`Catalog.aggregate_column_statistics()` on the configured columns and reports
+row count, null count, minimum, and maximum from Parquet metadata. Mean,
+standard deviation, and percentiles are unavailable in that metadata summary.
+Its `Rows` includes null entries, while `Nulls` reports how many there are.
+The HATS metadata also supplies the total row count without reading catalog
+rows. Non-HATS inputs continue to be
+read directly with `dask.dataframe.read_parquet`; their `basic_statistics`
+percentiles from Dask `describe()` are approximate, and `count` excludes null
+entries. The report names any selected columns omitted by Dask's default
+data-type selection. Both inputs use the same YAML
+sections and options, apart from the HATS-only `plot_pixels` and
+`plot_coverage` sections.
 
 The exported report uses this heading hierarchy:
 
@@ -267,8 +281,9 @@ configuration records that choice.
 `unique_count` always reports an exact global count or fails. It never reports an
 approximate count, sampled count, or per-partition count as if it were global.
 
-Use `unique_count.max_unique_values` to cap the number of unique values that may
-be collected by the driver while computing the exact result:
+Use `unique_count.max_unique_values` to cap the unique values retained at each
+partition and merge step. Partial sets are merged on workers, so the driver
+receives at most `max_unique_values + 1` values:
 
 ```yaml
 unique_count:
@@ -279,8 +294,8 @@ unique_count:
 ```
 
 If the exact global cardinality exceeds `max_unique_values`, the run raises an
-error and no count is reported. Increase this limit only when the high-cardinality
-exact count is scientifically required and the driver has enough memory.
+error and no count is reported. The count still scans the selected column across
+all catalog partitions, so it can take time for a very large catalog.
 
 Set `unique_count.list_values: true` to render the exact unique values in a
 scrollable HTML text box below the count. The optional `unique_count.list_rows`
@@ -363,6 +378,18 @@ to `NaN` in the Dask expression and are excluded by the existing finite-value
 filters used by histograms and distribution statistics. The same rule is applied
 to invalid flux or flux-error values in magnitude-error conversion.
 
+For HATS catalogs, magnitude and magnitude-error statistics estimate configured
+quantiles from the same fixed-bin histogram used for the other statistics. This
+avoids a second read and a separate distributed quantile calculation for each
+band and model. Count, mean, threshold fractions, and out-of-range counts still
+come directly from the values. Quantile resolution is set by
+`statistics.peak_bin_width` (0.1 mag and 0.01 mag error in the production YAML).
+The report marks these estimates with `≈` and rounds them to the bin width.
+Non-HATS catalogs keep the existing approximate Dask quantile calculation. The
+report also marks these quantiles with `≈`. To request this method for a HATS
+section, set `quantile_method: dask` under that section's
+`statistics` mapping; `quantile_method: histogram` is also available explicitly.
+
 ### Magnitude-Error Trends
 
 The optional `magnitude_error_trends` section renders magnitude versus
@@ -403,6 +430,11 @@ For HATS catalog inputs, two optional sections can render additional LSDB maps:
 
 - `Catalog.plot_pixels(projection="MOL")`
 - `Catalog.plot_coverage()`
+
+The `plot_pixels` colors show HEALPix order (pixel angular resolution), not
+object counts. Both HATS maps use a gray background so uncovered regions remain
+distinct from colored pixels; pixel polygon edges are drawn without
+antialiasing to reduce pale seams in raster output.
 
 These sections are opt-in. If `plot_pixels` or `plot_coverage` is absent, that
 map is not rendered. Optional keyword arguments can be passed through the YAML:
@@ -462,6 +494,6 @@ should be interpreted.
 - `configs/automatic_photometric_qa_dp2_local_test.yaml` is intended for quick DP2 local validation.
 - `configs/automatic_photometric_qa_dp1_local_test.yaml` is intended for quick DP1 local validation, including flux-to-magnitude conversion.
 - `configs/automatic_photometric_qa_dp1_dp2_local_test.yaml` is intended for multi-catalog local validation.
-- `configs/automatic_photometric_qa.yaml` mirrors the current LIneA/HPC QA configuration.
+- `configs/production/` contains the current LIneA/HPC DP1 and DP2 configurations.
 - Generated HTML reports and executed notebooks should be written under
   `outputs/` or `reports/`, which are ignored by Git.

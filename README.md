@@ -432,9 +432,9 @@ For HATS catalog inputs, two optional sections can render additional LSDB maps:
 - `Catalog.plot_coverage()`
 
 The `plot_pixels` colors show HEALPix order (pixel angular resolution), not
-object counts. Its report background is gray so uncovered regions remain
-distinct from colored pixels; polygon edges are drawn without antialiasing to
-reduce pale seams in raster output.
+object counts. Both HATS maps use a gray background so uncovered regions remain
+distinct from colored pixels; pixel polygon edges are drawn without
+antialiasing to reduce pale seams in raster output.
 
 These sections are opt-in. If `plot_pixels` or `plot_coverage` is absent, that
 map is not rendered. Optional keyword arguments can be passed through the YAML:

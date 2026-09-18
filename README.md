@@ -175,10 +175,16 @@ appear for that catalog. The basic product information section always runs for
 each catalog: catalog size, total row count, total column count, and column names.
 
 Catalog paths that contain `collection.properties` or `hats.properties` are
-treated as HATS catalogs. HATS inputs are opened with
-`lsdb.open_catalog(path, columns="all")`, then converted to a Dask DataFrame for
-the existing QA sections. Non-HATS inputs continue to be read directly with
-`dask.dataframe.read_parquet`.
+treated as HATS catalogs. The primary table is opened with
+`lsdb.open_catalog(primary_catalog_path, columns="all")`, without loading a
+collection's margin cache. The QA sections select only their
+required columns and use LSDB partition operations for counts, area, histograms,
+and magnitude diagnostics. The basic statistics section converts its selected
+columns to a Dask DataFrame for `describe()`. The HATS metadata supplies the
+total row count without reading catalog rows. Non-HATS inputs continue to be
+read directly with `dask.dataframe.read_parquet`. Both inputs use the same YAML
+sections and options, apart from the HATS-only `plot_pixels` and
+`plot_coverage` sections.
 
 The exported report uses this heading hierarchy:
 

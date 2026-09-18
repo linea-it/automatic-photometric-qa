@@ -184,9 +184,13 @@ histograms, and magnitude diagnostics. For HATS, `basic_statistics` uses
 `Catalog.aggregate_column_statistics()` on the configured columns and reports
 row count, null count, minimum, and maximum from Parquet metadata. Mean,
 standard deviation, and percentiles are unavailable in that metadata summary.
+Its `Rows` includes null entries, while `Nulls` reports how many there are.
 The HATS metadata also supplies the total row count without reading catalog
 rows. Non-HATS inputs continue to be
-read directly with `dask.dataframe.read_parquet`. Both inputs use the same YAML
+read directly with `dask.dataframe.read_parquet`; their `basic_statistics`
+percentiles from Dask `describe()` are approximate, and `count` excludes null
+entries. The report names any selected columns omitted by Dask's default
+data-type selection. Both inputs use the same YAML
 sections and options, apart from the HATS-only `plot_pixels` and
 `plot_coverage` sections.
 
@@ -381,8 +385,9 @@ band and model. Count, mean, threshold fractions, and out-of-range counts still
 come directly from the values. Quantile resolution is set by
 `statistics.peak_bin_width` (0.1 mag and 0.01 mag error in the production YAML).
 The report marks these estimates with `≈` and rounds them to the bin width.
-Non-HATS catalogs keep the existing Dask quantile calculation. To request it
-for a HATS section as well, set `quantile_method: dask` under that section's
+Non-HATS catalogs keep the existing approximate Dask quantile calculation. The
+report also marks these quantiles with `≈`. To request this method for a HATS
+section, set `quantile_method: dask` under that section's
 `statistics` mapping; `quantile_method: histogram` is also available explicitly.
 
 ### Magnitude-Error Trends

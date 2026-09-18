@@ -180,9 +180,12 @@ treated as HATS catalogs. The primary table is opened with
 without loading a collection's margin cache. Each QA section opens the same
 primary table with `columns=[...]` so Parquet reads include only its required
 columns. The sections use LSDB partition operations for counts, area,
-histograms, and magnitude diagnostics. The basic statistics section converts its selected
-columns to a Dask DataFrame for `describe()`. The HATS metadata supplies the
-total row count without reading catalog rows. Non-HATS inputs continue to be
+histograms, and magnitude diagnostics. For HATS, `basic_statistics` uses
+`Catalog.aggregate_column_statistics()` on the configured columns and reports
+row count, null count, minimum, and maximum from Parquet metadata. Mean,
+standard deviation, and percentiles are unavailable in that metadata summary.
+The HATS metadata also supplies the total row count without reading catalog
+rows. Non-HATS inputs continue to be
 read directly with `dask.dataframe.read_parquet`. Both inputs use the same YAML
 sections and options, apart from the HATS-only `plot_pixels` and
 `plot_coverage` sections.

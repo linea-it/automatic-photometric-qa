@@ -1,7 +1,7 @@
 notebook:
   title: Rubin DP1 - Parquet
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-09-04'
+  last_verified_run: '2026-09-21'
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:

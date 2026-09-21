@@ -1,0 +1,169 @@
+notebook:
+  title: Rubin DP1 - PostgreSQL
+  subtitle: Basic characterization of the release catalogs
+  last_verified_run: '2026-09-21'
+  introduction: This notebook provides lightweight statistics and diagnostic plots
+    for quick characterization of the release catalogs.
+
+from_database: true
+
+database:
+  # PGHOST, PGDATABASE, PGUSER, PGPASSWORD, and PGPORT take precedence.
+  # When they are absent, the default patterns read the format used by
+  # rubin_dp1_postgres.ipynb from this file.
+  credentials_file: ~/.pgcredential
+  connect_timeout: 15
+  list_objects: true
+
+catalogs:
+  - title: object_original_camelcase
+    schema: lsst_dp1
+    table: object_original_camelcase
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - objectId
+        - coord_ra
+        - coord_dec
+        - refExtendedness
+        - refSizeExtendedness
+        - u_cModelFlux
+        - u_cModelFluxErr
+        - g_cModelFlux
+        - g_cModelFluxErr
+        - r_cModelFlux
+        - r_cModelFluxErr
+        - i_cModelFlux
+        - i_cModelFluxErr
+        - z_cModelFlux
+        - z_cModelFluxErr
+        - y_cModelFlux
+        - y_cModelFluxErr
+      default_first_n: 20
+      max_columns: 100
+
+  - title: object
+    schema: lsst_dp1
+    table: object
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - object_id
+        - coord_ra
+        - coord_dec
+        - ref_extendedness
+        - ref_size_extendedness
+        - u_c_model_flux
+        - u_c_model_flux_err
+        - g_c_model_flux
+        - g_c_model_flux_err
+        - r_c_model_flux
+        - r_c_model_flux_err
+        - i_c_model_flux
+        - i_c_model_flux_err
+        - z_c_model_flux
+        - z_c_model_flux_err
+        - y_c_model_flux
+        - y_c_model_flux_err
+      default_first_n: 20
+      max_columns: 100
+
+  - title: SSObject
+    schema: lsst_dp1
+    table: SSObject
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - ssObjectId
+        - numObs
+        - discoverySubmissionDate
+      default_first_n: 20
+      max_columns: 100
+
+  - title: ssobject
+    schema: lsst_dp1
+    table: ssobject
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - ss_object_id
+        - num_obs
+        - discovery_submission_date
+      default_first_n: 20
+      max_columns: 100
+
+  - title: SSSource
+    schema: lsst_dp1
+    table: SSSource
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - phaseAngle
+        - heliocentricDist
+        - topocentricDist
+        - heliocentricX
+        - heliocentricY
+        - heliocentricZ
+        - heliocentricVX
+        - heliocentricVY
+        - heliocentricVZ
+        - topocentricX
+        - topocentricY
+        - topocentricZ
+        - topocentricVX
+        - topocentricVY
+        - topocentricVZ
+        - ssObjectId
+        - residualRa
+        - residualDec
+        - diaSourceId
+        - galacticL
+        - galacticB
+        - eclipticLambda
+        - eclipticBeta
+      default_first_n: 20
+      max_columns: 100
+
+  - title: sssource
+    schema: lsst_dp1
+    table: sssource
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns:
+        - phase_angle
+        - heliocentric_dist
+        - topocentric_dist
+        - heliocentric_x
+        - heliocentric_y
+        - heliocentric_z
+        - heliocentric_vx
+        - heliocentric_vy
+        - heliocentric_vz
+        - topocentric_x
+        - topocentric_y
+        - topocentric_z
+        - topocentric_vx
+        - topocentric_vy
+        - topocentric_vz
+        - ss_object_id
+        - residual_ra
+        - residual_dec
+        - dia_source_id
+        - galactic_l
+        - galactic_b
+        - ecliptic_lambda
+        - ecliptic_beta
+      default_first_n: 20
+      max_columns: 100

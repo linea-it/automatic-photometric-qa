@@ -258,7 +258,7 @@ database:
 
 ```text
 # hostname:port:database:username:password
-10.148.0.90:5432:testes_ingestao:svc_nifi_cat_rw:secret
+db.example.org:<port>:<database>:<username>:<password>
 ```
 
 When the file has multiple active entries, the first entry compatible with any

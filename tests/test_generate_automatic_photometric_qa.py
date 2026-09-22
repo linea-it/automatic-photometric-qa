@@ -136,19 +136,19 @@ class DatabaseCredentialsTest(unittest.TestCase):
 
     def test_reads_single_active_pgpass_entry(self):
         credentials = self.read(
-            "#10.148.0.90:5432:dba_testes:svc_nifi_cat_rw:ignored\n"
-            "10.148.0.90:5432:testes_ingestao:svc_nifi_cat_rw:secret\n"
-            "#10.148.0.90:5432:catalogsdb:svc_nifi_cat_rw:ignored\n"
+            "#db.example.org:6543:archive:qa_reader:ignored\n"
+            "db.example.org:6543:science_catalog:qa_reader:test-password\n"
+            "#db.example.org:6543:staging:qa_reader:ignored\n"
         )
 
         self.assertEqual(
             credentials,
             {
-                "host": "10.148.0.90",
-                "port": "5432",
-                "dbname": "testes_ingestao",
-                "user": "svc_nifi_cat_rw",
-                "password": "secret",
+                "host": "db.example.org",
+                "port": "6543",
+                "dbname": "science_catalog",
+                "user": "qa_reader",
+                "password": "test-password",
                 "connect_timeout": 15,
             },
         )

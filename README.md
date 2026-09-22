@@ -245,8 +245,30 @@ catalogs:
 Connection values are resolved in this order: PostgreSQL environment variable,
 direct YAML value, then `credentials_file`. The defaults use `PGHOST`,
 `PGDATABASE`, `PGUSER`, `PGPASSWORD`, and `PGPORT`. Avoid putting passwords in
-version-controlled YAML; use `PGPASSWORD` or the credential file instead. The
-default credential-file patterns match the format used by
+version-controlled YAML; use `PGPASSWORD` or the credential file instead.
+
+Standard PostgreSQL password files are supported directly. Blank lines and
+entries beginning with `#` are ignored, and escaped colons and backslashes are
+handled according to the `.pgpass` format:
+
+```yaml
+database:
+  credentials_file: ~/.pgpass
+```
+
+```text
+# hostname:port:database:username:password
+10.148.0.90:5432:testes_ingestao:svc_nifi_cat_rw:secret
+```
+
+When the file has multiple active entries, the first entry compatible with any
+host, port, database, and user already supplied through the environment or YAML
+is selected. With a single active entry, those connection values can all be
+read from the file. Wildcards in the first four fields are accepted for
+matching, but cannot supply a missing connection value.
+
+The existing custom credential-file format remains supported. Its default
+patterns match the format used by
 `rubin_dp1_postgres.ipynb` (`user:`, `pass:`, `- long:`, `database name:`, and
 optional `port:`). Different files can be supported with regular expressions:
 

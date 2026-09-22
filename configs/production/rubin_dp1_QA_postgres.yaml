@@ -9,8 +9,8 @@ from_database: true
 
 database:
   # PGHOST, PGDATABASE, PGUSER, PGPASSWORD, and PGPORT take precedence.
-  # When they are absent, the default patterns read the format used by
-  # rubin_dp1_postgres.ipynb from this file.
+  # This can be either a standard .pgpass file or the format used by
+  # rubin_dp1_postgres.ipynb (read with the default credential patterns).
   credentials_file: ~/.pgcredential
   connect_timeout: 15
   list_objects: true

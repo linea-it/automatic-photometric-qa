@@ -386,43 +386,6 @@ catalogs:
   plot_pixels:
     projection: MOL
   plot_coverage: {}
-- title: ss_source
-  omit_paths: true
-  path: <path-to-data>/ss_source
-  basic_statistics:
-    columns:
-    - phaseAngle
-    - helioRange
-    - topoRange
-    - helio_x
-    - helio_y
-    - helio_z
-    - helio_vx
-    - helio_vy
-    - helio_vz
-    - topo_x
-    - topo_y
-    - topo_z
-    - topo_vx
-    - topo_vy
-    - topo_vz
-    - ephRa
-    - ephDec
-    - ephRateRa
-    - ephRateDec
-    - ephVmag
-    - elongation
-    max_columns: 21
-  spatial_distribution:
-    ra_column: ephRa
-    dec_column: ephDec
-    ra_edge_count: 180
-    dec_edge_count: 90
-    split_every: 8
-    title_suffix: Spatial Distribution
-  plot_pixels:
-    projection: MOL
-  plot_coverage: {}
 - title: visit_detector_table
   omit_paths: true
   path: <path-to-data>/visit_detector_table

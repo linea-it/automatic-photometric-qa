@@ -236,6 +236,59 @@ class DatabaseCredentialsTest(unittest.TestCase):
         self.assertEqual(credentials["password"], r"pa:ss\word")
 
 
+class ParquetIndexHandlingTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        notebook = nbformat.read(NOTEBOOK_PATH, as_version=4)
+        source = next(
+            cell.source
+            for cell in notebook.cells
+            if cell.get("id") == "catalog-qa-sections"
+        )
+        tree = ast.parse(source)
+        selected_nodes = [
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "read_catalog_columns"
+        ]
+        cls.namespace = {"dd": dd}
+        exec(
+            compile(
+                ast.Module(selected_nodes, type_ignores=[]), str(NOTEBOOK_PATH), "exec"
+            ),
+            cls.namespace,
+        )
+
+    def test_mixed_named_and_range_indexes_are_read_as_columns(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            empty_path = root / "000-empty.parquet"
+            populated_path = root / "001-populated.parquet"
+
+            pd.DataFrame(
+                {
+                    "diaObjectId": pd.Series(dtype="int64"),
+                    "ra": pd.Series(dtype="float64"),
+                }
+            ).to_parquet(empty_path, engine="pyarrow")
+            pd.DataFrame(
+                {"ra": [12.5]},
+                index=pd.Index([42], name="diaObjectId"),
+            ).to_parquet(populated_path, engine="pyarrow")
+
+            result = self.namespace["read_catalog_columns"](
+                {
+                    "kind": "parquet",
+                    "parquet_files": [empty_path, populated_path],
+                },
+                columns=["diaObjectId"],
+            ).compute(scheduler="synchronous")
+
+        self.assertEqual(result["diaObjectId"].tolist(), [42])
+        self.assertIsNone(result.index.name)
+
+
 class PhotometryOptimizationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

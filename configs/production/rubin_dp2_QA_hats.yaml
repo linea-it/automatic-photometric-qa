@@ -5,9 +5,143 @@ notebook:
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
+- title: dia_object
+  omit_paths: true
+  path: <path-to-data>/dia_object
+  basic_statistics:
+    columns:
+    - ra
+    - dec
+    - nDiaSources
+    - u_psfFluxMean
+    - u_psfFluxMeanErr
+    - u_psfFluxSigma
+    - g_psfFluxMean
+    - g_psfFluxMeanErr
+    - g_psfFluxSigma
+    - r_psfFluxMean
+    - r_psfFluxMeanErr
+    - r_psfFluxSigma
+    - i_psfFluxMean
+    - i_psfFluxMeanErr
+    - i_psfFluxSigma
+    - z_psfFluxMean
+    - z_psfFluxMeanErr
+    - z_psfFluxSigma
+    - y_psfFluxMean
+    - y_psfFluxMeanErr
+    - y_psfFluxSigma
+    max_columns: 21
+  spatial_distribution:
+    ra_column: ra
+    dec_column: dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
+- title: dia_object_forced_source
+  omit_paths: true
+  path: <path-to-data>/dia_object_forced_source
+  basic_statistics:
+    columns:
+    - coord_ra
+    - coord_dec
+    - psfFlux
+    - psfFluxErr
+    - psfDiffFlux
+    - psfDiffFluxErr
+    max_columns: 21
+    group_by:
+      column: band
+      values: [u, g, r, i, z, y]
+      label: Band
+      split_every: 8
+  unique_count:
+    column: tract
+    max_unique_values: 10000
+  spatial_distribution:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
+- title: dia_source
+  omit_paths: true
+  path: <path-to-data>/dia_source
+  basic_statistics:
+    columns:
+    - midpointMjdTai
+    - coord_ra
+    - coord_dec
+    - raErr
+    - decErr
+    - snr
+    - psfFlux
+    - psfFluxErr
+    - psfChi2
+    - psfNdata
+    - scienceFlux
+    - scienceFluxErr
+    - templateFlux
+    - templateFluxErr
+    - reliability
+    - extendedness
+    - trailLength
+    - dipoleLength
+    - bboxSize
+    max_columns: 21
+  spatial_distribution:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
+- title: isolated_star_stellar_motions
+  omit_paths: true
+  path: <path-to-data>/isolated_star_stellar_motions
+  basic_statistics:
+    columns:
+    - ra
+    - dec
+    - raPM
+    - decPM
+    - parallax
+    - raErr
+    - decErr
+    - raPMErr
+    - decPMErr
+    - parallaxErr
+    - ref_ra
+    - ref_dec
+    - ref_raPM
+    - ref_decPM
+    - ref_parallax
+    - epoch
+    max_columns: 21
+  spatial_distribution:
+    ra_column: ra
+    dec_column: dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
 - title: object
   omit_paths: true
-  path: <full-path-to-hats-collection-folder>
+  path: <path-to-data>/object
   basic_statistics:
     columns:
     - objectId
@@ -19,18 +153,18 @@ catalogs:
     - detect_isIsolated
     - detect_fromBlend
     - detect_isDeblendedModelSource
-    - u_cModelMag
-    - u_cModelMagErr
-    - g_cModelMag
-    - g_cModelMagErr
-    - r_cModelMag
-    - r_cModelMagErr
-    - i_cModelMag
-    - i_cModelMagErr
-    - z_cModelMag
-    - z_cModelMagErr
-    - y_cModelMag
-    - y_cModelMagErr
+    - u_cModelFlux
+    - u_cModelFluxErr
+    - g_cModelFlux
+    - g_cModelFluxErr
+    - r_cModelFlux
+    - r_cModelFluxErr
+    - i_cModelFlux
+    - i_cModelFluxErr
+    - z_cModelFlux
+    - z_cModelFluxErr
+    - y_cModelFlux
+    - y_cModelFluxErr
     default_first_n: 20
     max_columns: 100
   unique_count:
@@ -45,7 +179,7 @@ catalogs:
     split_every: 8
     title_suffix: Spatial Distribution
     footprints:
-    - path: <full-path-to-footprint-data>/des_round19_footprint.csv
+    - path: <path-to-footprint-data>/des_round19_footprint.csv
       label: DES Round 19 footprint
       color: blue
       type: regions
@@ -55,7 +189,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: <full-path-to-footprint-data>/rubin_dp2_footprint.csv
+    - path: <path-to-footprint-data>/rubin_dp2_footprint.csv
       label: Rubin DP2 footprint
       color: red
       type: regions
@@ -65,7 +199,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: <full-path-to-footprint-data>/rubin_footprint.csv
+    - path: <path-to-footprint-data>/rubin_footprint.csv
       label: Rubin footprint
       color: orange
       type: curve
@@ -87,19 +221,19 @@ catalogs:
     - z
     - y
     models:
-    - psfMag
-    - kronMag
-    - cModelMag
+    - psfFlux
+    - kronFlux
+    - cModelFlux
     - gaap1p0Flux
     model_labels:
-      psfMag: PSF
-      kronMag: Kron
-      cModelMag: cModel
+      psfFlux: PSF
+      kronFlux: Kron
+      cModelFlux: cModel
       gaap1p0Flux: GAaP 1.0
     model_colors:
-      psfMag: tab:blue
-      kronMag: tab:orange
-      cModelMag: tab:green
+      psfFlux: tab:blue
+      kronFlux: tab:orange
+      cModelFlux: tab:green
       gaap1p0Flux: tab:red
     histogram:
       bins: 80
@@ -112,6 +246,7 @@ catalogs:
       - -2
       - 35
       peak_bin_width: 0.1
+      quantile_method: histogram
       thresholds: []
       quantiles:
       - 0.16
@@ -122,19 +257,19 @@ catalogs:
     mag_offset: 31.4
   magnitude_errors:
     models:
-    - psfMagErr
-    - kronMagErr
-    - cModelMagErr
+    - psfFluxErr
+    - kronFluxErr
+    - cModelFluxErr
     - gaap1p0FluxErr
     model_labels:
-      psfMagErr: PSF
-      kronMagErr: Kron
-      cModelMagErr: cModel
+      psfFluxErr: PSF
+      kronFluxErr: Kron
+      cModelFluxErr: cModel
       gaap1p0FluxErr: GAaP 1.0
     model_colors:
-      psfMagErr: tab:blue
-      kronMagErr: tab:orange
-      cModelMagErr: tab:green
+      psfFluxErr: tab:blue
+      kronFluxErr: tab:orange
+      cModelFluxErr: tab:green
       gaap1p0FluxErr: tab:red
     histogram:
       bins: 80
@@ -147,6 +282,7 @@ catalogs:
       - 0
       - 8
       peak_bin_width: 0.01
+      quantile_method: histogram
       thresholds:
       - 0.1
       - 0.2
@@ -181,46 +317,149 @@ catalogs:
   plot_pixels:
     projection: MOL
   plot_coverage: {}
-- title: object_shear_all
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: object_scarlet_models
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: isolated_star_stellar_motions
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: source
-  omit_paths: true
-  status: planned
-  markdown: To be done
 - title: object_forced_source
   omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_object
+  path: <path-to-data>/object_forced_source
+  basic_statistics:
+    columns:
+    - coord_ra
+    - coord_dec
+    - psfFlux
+    - psfFluxErr
+    - psfDiffFlux
+    - psfDiffFluxErr
+    max_columns: 21
+    group_by:
+      column: band
+      values: [u, g, r, i, z, y]
+      label: Band
+      split_every: 8
+  unique_count:
+    column: tract
+    max_unique_values: 10000
+  spatial_distribution:
+    ra_column: coord_ra
+    dec_column: coord_dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
+- title: object_shear_all
   omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_source
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_object_forced_source
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: ss_object
-  omit_paths: true
-  status: planned
-  markdown: To be done
+  path: <path-to-data>/object_shear_all
+  basic_statistics:
+    columns:
+    - ra
+    - dec
+    - mfrac
+    - psfOriginal_g1
+    - psfOriginal_g2
+    - psfOriginal_T
+    - gauss_psfReconvolved_g1
+    - gauss_psfReconvolved_g2
+    - gauss_psfReconvolved_T
+    - gauss_g1
+    - gauss_g2
+    - gauss_g1_g1_Cov
+    - gauss_g1_g2_Cov
+    - gauss_g2_g2_Cov
+    - gauss_snr
+    - gauss_T
+    - gauss_TErr
+    - pgauss_snr
+    - pgauss_T
+    - pgauss_TErr
+    max_columns: 21
+  unique_count:
+    column: tract
+    max_unique_values: 10000
+  spatial_distribution:
+    ra_column: ra
+    dec_column: dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
 - title: ss_source
   omit_paths: true
-  status: planned
-  markdown: To be done
+  path: <path-to-data>/ss_source
+  basic_statistics:
+    columns:
+    - phaseAngle
+    - helioRange
+    - topoRange
+    - helio_x
+    - helio_y
+    - helio_z
+    - helio_vx
+    - helio_vy
+    - helio_vz
+    - topo_x
+    - topo_y
+    - topo_z
+    - topo_vx
+    - topo_vy
+    - topo_vz
+    - ephRa
+    - ephDec
+    - ephRateRa
+    - ephRateDec
+    - ephVmag
+    - elongation
+    max_columns: 21
+  spatial_distribution:
+    ra_column: ephRa
+    dec_column: ephDec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
+- title: visit_detector_table
+  omit_paths: true
+  path: <path-to-data>/visit_detector_table
+  basic_statistics:
+    columns:
+    - ra
+    - dec
+    - zenithDistance
+    - expTime
+    - expMidptMJD
+    - zeroPoint
+    - psfSigma
+    - seeing
+    - skyBg
+    - skyNoise
+    - astromOffsetMean
+    - astromOffsetStd
+    - nPsfStar
+    - psfStarDeltaE1Scatter
+    - psfStarDeltaE2Scatter
+    - psfStarDeltaSizeScatter
+    - effTime
+    - magLim
+    - wcsCornerMaxOffset
+    - wcsDetectorPointingResidual
+    - wcsVisitPointingResidual
+    max_columns: 21
+  spatial_distribution:
+    ra_column: ra
+    dec_column: dec
+    ra_edge_count: 180
+    dec_edge_count: 90
+    split_every: 8
+    title_suffix: Spatial Distribution
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
 cluster:
   type: slurm
   local:
@@ -228,15 +467,15 @@ cluster:
     cores: 2
     memory: 2GB
   slurm:
-    n_workers: 28
+    n_workers: 22
     queue: cpu_pipelines
     account: hpc-pipelines
     interface: ib0
     cores: 4
     processes: 1
-    memory: 24GB
-    walltime: 02:00:00
+    memory: 32GB
+    walltime: 12:00:00
     adapt:
-      minimum_jobs: 28
-      maximum_jobs: 28
-    wait_for_workers: 28
+      minimum_jobs: 22
+      maximum_jobs: 22
+    wait_for_workers: 22

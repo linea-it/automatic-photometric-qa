@@ -16,5 +16,6 @@ dependencies:
   - numpy
   - pandas
   - pyarrow
+  - psycopg
   - pyyaml
   - seaborn

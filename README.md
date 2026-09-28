@@ -9,7 +9,7 @@ produce executed HTML reports from the command line.
 ```text
 .
 ├── configs/
-│   ├── production/                                 # DP1 and DP2 Parquet/HATS configurations
+│   ├── production/                                 # DP1 and DP2 Parquet/HATS/PostgreSQL configurations
 │   ├── automatic_photometric_qa_dp2_local_test.yaml      # DP2 local test configuration
 │   ├── automatic_photometric_qa_dp1_local_test.yaml      # DP1 local test configuration
 │   └── automatic_photometric_qa_dp1_dp2_local_test.yaml  # Multi-catalog local test configuration
@@ -42,7 +42,7 @@ conda install -c conda-forge \
   dask distributed dask-jobqueue \
   pandas numpy matplotlib seaborn \
   pyyaml ipython ipykernel nbclient nbconvert nbformat \
-  pyarrow lsdb
+  pyarrow lsdb psycopg
 ```
 
 After activating the environment, run the CLI with the active environment's
@@ -107,6 +107,14 @@ python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
+Run the PostgreSQL report (connection details are described below):
+
+```bash
+python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp1_QA_postgres.yaml \
+  --output outputs/rubin_dp1_QA_postgres.html \
+  --hide-code
+```
+
 During execution, the CLI prints progress messages for the main notebook steps
 and for each configured catalog section. Internal progress markers are not stored
 in the exported HTML.
@@ -128,7 +136,7 @@ Starting catalog 2: Rubin DP2 — scrambled local sample
 The YAML file controls the global notebook title, Dask cluster, catalog inputs,
 selected statistics, plots, and survey footprints.
 
-Required global YAML sections:
+Required global YAML sections for Parquet and HATS inputs:
 
 - `notebook`: report title, subtitle, optional introduction, and last verified run date.
 - `catalogs`: one or more catalog configurations.
@@ -172,7 +180,8 @@ Optional per-catalog sections:
 
 If an optional section is absent from a catalog entry, that section does not
 appear for that catalog. The basic product information section always runs for
-each catalog: catalog size, total row count, total column count, and column names.
+each catalog: catalog size, total row count, total column count, and a scrollable
+table containing column names and data types.
 
 Catalog paths that contain `collection.properties` or `hats.properties` are
 treated as HATS catalogs. The primary table is opened with
@@ -202,6 +211,88 @@ The exported report uses this heading hierarchy:
   unique count, spatial distribution, magnitudes, and magnitude errors.
 
 Relative paths in the YAML are resolved relative to the YAML file location.
+
+### PostgreSQL Inputs
+
+Set `from_database: true` and provide a `database` mapping to read selected
+catalogs directly from PostgreSQL. In this mode, `cluster` and catalog `path`
+are not required. Each available catalog instead requires `schema` and `table`.
+The report opens one connection, lists all visible non-system schemas and
+tables, then renders the selected table name, row and column counts, column
+names and PostgreSQL types, five preview rows by default, and configured basic
+statistics. Other distributed QA sections are not run for database catalogs.
+
+```yaml
+from_database: true
+
+database:
+  credentials_file: ~/.pgcredential
+  connect_timeout: 15
+  list_objects: true
+
+catalogs:
+  - title: DP1 object
+    schema: lsst_dp1
+    table: object_original_camelcase
+    preview:
+      rows: 5
+      columns: all
+    basic_statistics:
+      columns: [objectId, coord_ra, coord_dec, g_cModelFlux]
+      max_columns: 100
+```
+
+Connection values are resolved in this order: PostgreSQL environment variable,
+direct YAML value, then `credentials_file`. The defaults use `PGHOST`,
+`PGDATABASE`, `PGUSER`, `PGPASSWORD`, and `PGPORT`. Avoid putting passwords in
+version-controlled YAML; use `PGPASSWORD` or the credential file instead.
+
+Standard PostgreSQL password files are supported directly. Blank lines and
+entries beginning with `#` are ignored, and escaped colons and backslashes are
+handled according to the `.pgpass` format:
+
+```yaml
+database:
+  credentials_file: ~/.pgpass
+```
+
+```text
+# hostname:port:database:username:password
+db.example.org:<port>:<database>:<username>:<password>
+```
+
+When the file has multiple active entries, the first entry compatible with any
+host, port, database, and user already supplied through the environment or YAML
+is selected. With a single active entry, those connection values can all be
+read from the file. Wildcards in the first four fields are accepted for
+matching, but cannot supply a missing connection value.
+
+The existing custom credential-file format remains supported. Its default
+patterns match the format used by
+`rubin_dp1_postgres.ipynb` (`user:`, `pass:`, `- long:`, `database name:`, and
+optional `port:`). Different files can be supported with regular expressions:
+
+```yaml
+database:
+  credentials_file: ~/.pgcredential
+  credential_patterns:
+    host: '^host:\s*(.+)$'
+    dbname: '^database:\s*(.+)$'
+    user: '^user:\s*(.+)$'
+    password: '^password:\s*(.+)$'
+```
+
+Set `database.list_objects: false` to omit the schema/table inventory. Preview
+defaults to five rows and all columns; `preview.columns` may instead be an
+explicit list, and `preview: false` disables it. `preview.rows` is limited to
+1–100.
+
+Database basic statistics calculate non-null count, mean, sample standard
+deviation, minimum, and maximum in PostgreSQL. When
+`basic_statistics.columns` is `null` or omitted, the first
+`default_first_n` numeric columns are used. Explicit selections must contain
+numeric PostgreSQL columns because `AVG` and `STDDEV_SAMP` are part of this
+summary.
 
 `notebook.introduction` is optional. When it is configured, the report renders it
 between horizontal rules below the global header. When it is absent or empty, no

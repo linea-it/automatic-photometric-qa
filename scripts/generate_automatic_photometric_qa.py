@@ -144,9 +144,22 @@ def load_config(config_path: Path) -> dict:
     if not isinstance(config, dict):
         raise ValueError("The automatic photometric QA configuration must be a YAML mapping.")
 
-    for required_section in ("notebook", "cluster"):
+    from_database = config.get("from_database", False)
+
+    if not isinstance(from_database, bool):
+        raise ValueError("from_database must be true or false.")
+
+    required_sections = ["notebook"]
+    required_sections.append("database" if from_database else "cluster")
+
+    for required_section in required_sections:
         if required_section not in config:
             raise ValueError(f"Missing required configuration section: {required_section}")
+
+        if not isinstance(config[required_section], dict):
+            raise ValueError(
+                f"Configuration section '{required_section}' must be a YAML mapping."
+            )
 
     if "catalogs" not in config and "catalog" not in config:
         raise ValueError("Missing required configuration section: catalogs")
@@ -156,28 +169,40 @@ def load_config(config_path: Path) -> dict:
 
         if not isinstance(catalogs, list) or not catalogs:
             raise ValueError("catalogs must be a non-empty list.")
+    else:
+        catalogs = [config["catalog"]]
 
-        for catalog_index, catalog_config in enumerate(catalogs, start=1):
-            if not isinstance(catalog_config, dict):
-                raise ValueError(f"catalogs[{catalog_index}] must be a YAML mapping.")
+    for catalog_index, catalog_config in enumerate(catalogs, start=1):
+        if not isinstance(catalog_config, dict):
+            raise ValueError(f"catalogs[{catalog_index}] must be a YAML mapping.")
 
-            status = catalog_config.get("status", "available")
+        status = catalog_config.get("status", "available")
 
-            if status not in {"available", "planned"}:
-                raise ValueError(
-                    f"catalogs[{catalog_index}].status must be either 'available' "
-                    f"or 'planned', got: {status!r}"
-                )
+        if status not in {"available", "planned"}:
+            raise ValueError(
+                f"catalogs[{catalog_index}].status must be either 'available' "
+                f"or 'planned', got: {status!r}"
+            )
 
-            omit_paths = catalog_config.get("omit_paths", False)
+        omit_paths = catalog_config.get("omit_paths", False)
 
-            if not isinstance(omit_paths, bool):
-                raise ValueError(
-                    f"catalogs[{catalog_index}].omit_paths must be true or false, "
-                    f"got: {omit_paths!r}"
-                )
+        if not isinstance(omit_paths, bool):
+            raise ValueError(
+                f"catalogs[{catalog_index}].omit_paths must be true or false, "
+                f"got: {omit_paths!r}"
+            )
 
-            if status == "available" and "path" not in catalog_config:
+        if status == "available":
+            if from_database:
+                missing_keys = [
+                    key for key in ("schema", "table") if key not in catalog_config
+                ]
+                if missing_keys:
+                    raise ValueError(
+                        f"catalogs[{catalog_index}] is a database catalog and is "
+                        "missing required key(s): " + ", ".join(missing_keys)
+                    )
+            elif "path" not in catalog_config:
                 raise ValueError(
                     f"catalogs[{catalog_index}] is available and is missing "
                     "required key: path. Use status: planned for placeholder "
@@ -242,7 +267,7 @@ def main() -> None:
     output_path = output_path.resolve()
 
     log_step(f"Loading configuration: {config_path}")
-    config = load_config(config_path)
+    load_config(config_path)
     log_step(f"Loading notebook template: {notebook_path}")
     nb = nbformat.read(notebook_path, as_version=4)
     log_step("Executing notebook")

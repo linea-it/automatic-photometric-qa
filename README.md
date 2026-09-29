@@ -107,6 +107,11 @@ python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
+The per-cell execution timeout defaults to the `walltime` of the active cluster
+backend (for example, `cluster.slurm.walltime`). If that backend has no
+configured walltime, the fallback is 3600 seconds. Pass `--timeout SECONDS` to
+override the derived value explicitly.
+
 Run the PostgreSQL report (connection details are described below):
 
 ```bash
@@ -148,6 +153,17 @@ Each available catalog entry in `catalogs` requires:
 - `path`: input parquet file or directory.
 - `parquet_pattern`: file pattern used when `path` is a directory. The
   default is `*.parquet`.
+- `parquet_read`: optional Dask read tuning for non-HATS catalogs. Supported
+  keys are `aggregate_files`, `split_row_groups`, and `blocksize`. For a large
+  catalog composed of many small files, a typical configuration is:
+
+  ```yaml
+  parquet_read:
+    aggregate_files: true
+    split_row_groups: adaptive
+    blocksize: 256MiB
+  ```
+
 - `omit_paths`: when `true`, the catalog path is not included in the rendered
   report. It defaults to `false` for backward compatibility.
 
@@ -198,7 +214,8 @@ The HATS metadata also supplies the total row count without reading catalog
 rows. Non-HATS inputs continue to be
 read directly with `dask.dataframe.read_parquet`; their `basic_statistics`
 percentiles from Dask `describe()` are approximate, and `count` excludes null
-entries. The report names any selected columns omitted by Dask's default
+entries. Their total row count is obtained from Parquet footer metadata without
+scanning a data column. The report names any selected columns omitted by Dask's default
 data-type selection. Both inputs use the same YAML
 sections and options, apart from the HATS-only `plot_pixels` and
 `plot_coverage` sections.

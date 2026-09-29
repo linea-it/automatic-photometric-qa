@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+from time import perf_counter
 import unittest
 from unittest import mock
 
@@ -89,6 +90,77 @@ class LoadConfigTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "from_database must be true or false"):
             self.load(config)
+
+
+class NotebookTimeoutTest(unittest.TestCase):
+    def test_timeout_defaults_to_active_backend_walltime(self):
+        config = {
+            "cluster": {
+                "type": "slurm",
+                "local": {"walltime": "01:00:00"},
+                "slurm": {"walltime": "12:00:00"},
+            }
+        }
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, None), 12 * 3600)
+
+    def test_walltime_supports_days(self):
+        self.assertEqual(MODULE.parse_walltime_seconds("2-03:04:05"), 183845)
+
+    def test_walltime_supports_yaml_sexagesimal_integer(self):
+        self.assertEqual(MODULE.parse_walltime_seconds(43200), 43200)
+
+    def test_explicit_timeout_takes_precedence(self):
+        config = {"cluster": {"type": "slurm", "slurm": {"walltime": "12:00:00"}}}
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, 7200), 7200)
+
+    def test_timeout_falls_back_when_backend_has_no_walltime(self):
+        config = {"cluster": {"type": "local", "local": {}}}
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, None), 3600)
+
+    def test_invalid_walltime_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Invalid cluster walltime"):
+            MODULE.parse_walltime_seconds("12:75:00")
+
+
+class SlurmWalltimeTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        notebook = nbformat.read(NOTEBOOK_PATH, as_version=4)
+        source = next(
+            cell.source
+            for cell in notebook.cells
+            if cell.get("id") == "imports-and-helpers"
+        )
+        tree = ast.parse(source)
+        selected_nodes = [
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "normalize_slurm_walltime"
+        ]
+        cls.namespace = {}
+        exec(
+            compile(
+                ast.Module(selected_nodes, type_ignores=[]), str(NOTEBOOK_PATH), "exec"
+            ),
+            cls.namespace,
+        )
+
+    def test_yaml_sexagesimal_integer_is_formatted_as_slurm_clock(self):
+        self.assertEqual(self.namespace["normalize_slurm_walltime"](43200), "12:00:00")
+
+    def test_explicit_slurm_clock_is_preserved(self):
+        self.assertEqual(
+            self.namespace["normalize_slurm_walltime"]("12:00:00"), "12:00:00"
+        )
+
+    def test_integer_walltime_supports_days(self):
+        self.assertEqual(
+            self.namespace["normalize_slurm_walltime"](183845), "2-03:04:05"
+        )
 
 
 class DatabaseCredentialsTest(unittest.TestCase):
@@ -246,13 +318,26 @@ class ParquetIndexHandlingTest(unittest.TestCase):
             if cell.get("id") == "catalog-qa-sections"
         )
         tree = ast.parse(source)
+        function_names = {
+            "get_parquet_read_options",
+            "read_catalog_columns",
+            "_qa_parquet_footer_batch_row_count",
+            "qa_parquet_footer_row_count",
+        }
         selected_nodes = [
             node
             for node in tree.body
-            if isinstance(node, ast.FunctionDef)
-            and node.name == "read_catalog_columns"
+            if (
+                isinstance(node, ast.Assign)
+                and any(
+                    isinstance(target, ast.Name)
+                    and target.id == "PARQUET_READ_OPTION_NAMES"
+                    for target in node.targets
+                )
+            )
+            or (isinstance(node, ast.FunctionDef) and node.name in function_names)
         ]
-        cls.namespace = {"dd": dd}
+        cls.namespace = {"dask": dask, "dd": dd, "delayed": delayed}
         exec(
             compile(
                 ast.Module(selected_nodes, type_ignores=[]), str(NOTEBOOK_PATH), "exec"
@@ -287,6 +372,53 @@ class ParquetIndexHandlingTest(unittest.TestCase):
 
         self.assertEqual(result["diaObjectId"].tolist(), [42])
         self.assertIsNone(result.index.name)
+
+    def test_catalog_read_uses_configured_file_aggregation(self):
+        context = {
+            "kind": "parquet",
+            "parquet_files": [Path("part.parquet")],
+            "parquet_read_options": {
+                "aggregate_files": True,
+                "split_row_groups": "adaptive",
+                "blocksize": "256MiB",
+            },
+        }
+
+        with mock.patch.object(dd, "read_parquet") as read_parquet:
+            self.namespace["read_catalog_columns"](context, columns=["coord_ra"])
+
+        read_parquet.assert_called_once_with(
+            context["parquet_files"],
+            engine="pyarrow",
+            columns=["coord_ra"],
+            index=False,
+            **context["parquet_read_options"],
+        )
+
+    def test_unsupported_parquet_read_option_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported parquet_read option"):
+            self.namespace["get_parquet_read_options"](
+                {"parquet_read": {"unexpected": True}}
+            )
+
+    def test_footer_row_count_does_not_scan_catalog_columns(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            empty_path = root / "empty.parquet"
+            populated_path = root / "populated.parquet"
+            pd.DataFrame({"value": pd.Series(dtype="float64")}).to_parquet(
+                empty_path, engine="pyarrow"
+            )
+            pd.DataFrame({"value": [1.0, 2.0]}).to_parquet(
+                populated_path, engine="pyarrow"
+            )
+
+            with dask.config.set(scheduler="synchronous"):
+                result = self.namespace["qa_parquet_footer_row_count"](
+                    [empty_path, populated_path], batch_size=1
+                )
+
+        self.assertEqual(result, 2)
 
 
 class PhotometryOptimizationTest(unittest.TestCase):
@@ -332,6 +464,7 @@ class PhotometryOptimizationTest(unittest.TestCase):
             "delayed": delayed,
             "np": np,
             "pd": pd,
+            "perf_counter": perf_counter,
             "qa_log": lambda message: None,
         }
         exec(

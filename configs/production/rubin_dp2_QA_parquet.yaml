@@ -56,6 +56,10 @@ catalogs:
   omit_paths: true
   path: <path-to-data>/dia_object_forced_source
   parquet_pattern: '*.parq'
+  parquet_read:
+    aggregate_files: true
+    split_row_groups: adaptive
+    blocksize: 256MiB
   basic_statistics:
     columns:
     - coord_ra
@@ -323,6 +327,10 @@ catalogs:
   omit_paths: true
   path: <path-to-data>/object_forced_source
   parquet_pattern: '*.parq'
+  parquet_read:
+    aggregate_files: true
+    split_row_groups: adaptive
+    blocksize: 256MiB
   basic_statistics:
     columns:
     - coord_ra

@@ -544,10 +544,14 @@ band and model. Count, mean, threshold fractions, and out-of-range counts still
 come directly from the values. Quantile resolution is set by
 `statistics.peak_bin_width` (0.1 mag and 0.01 mag error in the production YAML).
 The report marks these estimates with `≈` and rounds them to the bin width.
-Non-HATS catalogs keep the existing approximate Dask quantile calculation. The
-report also marks these quantiles with `≈`. To request this method for a HATS
-section, set `quantile_method: dask` under that section's
-`statistics` mapping; `quantile_method: histogram` is also available explicitly.
+Non-HATS catalogs use the approximate Dask quantile calculation by default. The
+report also marks these quantiles with `≈`. When both Parquet photometry sections
+explicitly set `quantile_method: histogram`, the pipeline uses one bounded-memory
+partition reduction for magnitude statistics, magnitude-error statistics, and
+their trends. It converts and summarizes one column or pair at a time instead of
+materializing copied DataFrames for all photometric columns. To request the Dask
+method explicitly, set `quantile_method: dask`; `quantile_method: histogram` is
+available for both Parquet and HATS inputs.
 
 ### Magnitude-Error Trends
 

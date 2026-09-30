@@ -113,6 +113,7 @@ catalogs:
       - -2
       - 35
       peak_bin_width: 0.1
+      quantile_method: histogram
       thresholds: []
       quantiles:
       - 0.16
@@ -148,6 +149,7 @@ catalogs:
       - 0
       - 8
       peak_bin_width: 0.01
+      quantile_method: histogram
       thresholds:
       - 0.1
       - 0.2

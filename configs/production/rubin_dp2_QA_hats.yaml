@@ -434,7 +434,7 @@ cluster:
     queue: cpu_pipelines
     account: hpc-pipelines
     interface: ib0
-    cores: 4
+    cores: 2
     processes: 1
     memory: 32GB
     walltime: 12:00:00

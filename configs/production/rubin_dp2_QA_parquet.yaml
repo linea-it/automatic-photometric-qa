@@ -151,6 +151,9 @@ catalogs:
   omit_paths: true
   path: <path-to-data>/object
   parquet_pattern: '*.parq'
+  parquet_read:
+    aggregate_files: false
+    split_row_groups: true
   basic_statistics:
     columns:
     - objectId
@@ -534,7 +537,7 @@ cluster:
     queue: cpu_pipelines
     account: hpc-pipelines
     interface: ib0
-    cores: 4
+    cores: 2
     processes: 1
     memory: 32GB
     walltime: 12:00:00

@@ -450,6 +450,17 @@ class PhotometryOptimizationTest(unittest.TestCase):
             "qa_histogram_quantiles",
             "make_distribution_products_plan",
             "finalize_distribution_products",
+            "_qa_make_histogram_distribution_spec",
+            "_qa_numeric_values",
+            "_qa_magnitude_values",
+            "_qa_magnitude_error_values",
+            "_qa_distribution_products_from_values",
+            "_qa_binned_relation_products_from_values",
+            "_qa_partition_photometry_products",
+            "make_memory_efficient_photometry_plan",
+            "finalize_memory_efficient_photometry_plan",
+            "should_use_memory_efficient_photometry",
+            "compute_memory_efficient_photometry_results",
             "compute_photometry_distribution_results",
         }
         selected_nodes = [
@@ -626,6 +637,52 @@ class PhotometryOptimizationTest(unittest.TestCase):
         np.testing.assert_allclose(
             [quantile[0] for quantile in quantiles], [0.15, 0.15]
         )
+
+    def test_histogram_path_uses_one_bounded_partition_reduction(self):
+        reader = mock.Mock(return_value=self.raw_source())
+        self.namespace["read_catalog_columns"] = reader
+        config = self.config()
+        legacy_magnitude_conversion = self.namespace["_convert_magnitude_partition"]
+        legacy_error_conversion = self.namespace["_convert_error_partition"]
+        self.namespace["_convert_magnitude_partition"] = mock.Mock(
+            side_effect=AssertionError("legacy DataFrame conversion was used")
+        )
+        self.namespace["_convert_error_partition"] = mock.Mock(
+            side_effect=AssertionError("legacy DataFrame conversion was used")
+        )
+
+        try:
+            results = self.namespace["compute_photometry_distribution_results"](
+                config,
+                {"kind": "parquet"},
+            )
+        finally:
+            self.namespace["_convert_magnitude_partition"] = legacy_magnitude_conversion
+            self.namespace["_convert_error_partition"] = legacy_error_conversion
+
+        reader.assert_called_once_with(
+            {"kind": "parquet"},
+            columns=["g_psfFlux", "g_psfFluxErr"],
+        )
+        magnitudes = 31.4 - 2.5 * np.log10([100.0, 10.0, 1.0])
+        errors = 2.5 / np.log(10.0) * np.array([0.1, 0.2, 0.1])
+        np.testing.assert_array_equal(
+            results["magnitudes"]["histograms"]["g_psfFlux"],
+            np.histogram(magnitudes, bins=np.linspace(25.0, 30.0, 6))[0],
+        )
+        np.testing.assert_array_equal(
+            results["magnitude_errors"]["histograms"]["g_psfFluxErr"],
+            np.histogram(errors, bins=np.linspace(0.0, 0.2, 5))[0],
+        )
+        trend = results["magnitude_error_trends"]
+        pair = ("g_psfFlux", "g_psfFluxErr")
+        counts, exact_mean, _ = self.namespace["summarize_binned_relation"](
+            trend["histograms"][pair],
+            trend["error_sums"][pair],
+            trend["error_edges"],
+        )
+        self.assertEqual(counts[0], 2)
+        self.assertAlmostEqual(exact_mean[0], errors[:2].mean())
 
     def test_trend_reduction_includes_upper_edges_and_keeps_rows_paired(self):
         partition = pd.DataFrame(

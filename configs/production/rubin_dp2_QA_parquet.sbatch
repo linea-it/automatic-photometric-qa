@@ -12,8 +12,9 @@
 
 set -euo pipefail
 
-SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-REPOSITORY_DIRECTORY="$(cd -- "${SCRIPT_DIRECTORY}/../.." && pwd)"
+# SLURM executes a spool copy of this file, so BASH_SOURCE does not point to
+# the repository. Submit this script from the repository root.
+REPOSITORY_DIRECTORY="${SLURM_SUBMIT_DIR:-${PWD}}"
 PYTHON_EXECUTABLE="${QA_PYTHON:-/scripts/luigi.silva/ondemand/automatic-photometric-qa/bin/python}"
 DRIVER_CPUS="${SLURM_CPUS_PER_TASK:-2}"
 

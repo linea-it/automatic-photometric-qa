@@ -126,8 +126,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--timeout",
         type=int,
-        default=3600,
-        help="Per-cell execution timeout in seconds. Default: 3600.",
+        help=(
+            "Per-cell execution timeout in seconds. By default, use the active "
+            "cluster backend walltime, falling back to 3600 seconds when no "
+            "walltime is configured."
+        ),
     )
     parser.add_argument(
         "--kernel-name",
@@ -212,6 +215,61 @@ def load_config(config_path: Path) -> dict:
     return config
 
 
+def parse_walltime_seconds(walltime: str | int) -> int:
+    """Parse seconds or a SLURM-style [days-]hours:minutes:seconds walltime."""
+
+    # PyYAML 1.1 interprets an unquoted value such as 12:00:00 as the
+    # sexagesimal integer 43200. Treat that representation as seconds.
+    if isinstance(walltime, int) and not isinstance(walltime, bool):
+        if walltime <= 0:
+            raise ValueError(f"Invalid cluster walltime: {walltime!r}")
+        return walltime
+
+    value = str(walltime).strip()
+    day_text, separator, clock_text = value.partition("-")
+
+    if separator:
+        if not day_text.isdigit():
+            raise ValueError(f"Invalid cluster walltime: {walltime!r}")
+        days = int(day_text)
+    else:
+        days = 0
+        clock_text = day_text
+
+    clock_parts = clock_text.split(":")
+    if len(clock_parts) != 3 or any(not part.isdigit() for part in clock_parts):
+        raise ValueError(f"Invalid cluster walltime: {walltime!r}")
+
+    hours, minutes, seconds = map(int, clock_parts)
+    if minutes >= 60 or seconds >= 60:
+        raise ValueError(f"Invalid cluster walltime: {walltime!r}")
+
+    total_seconds = days * 86400 + hours * 3600 + minutes * 60 + seconds
+    if total_seconds <= 0:
+        raise ValueError(f"Invalid cluster walltime: {walltime!r}")
+
+    return total_seconds
+
+
+def resolve_notebook_timeout(config: dict, requested_timeout: int | None) -> int:
+    """Return an explicit timeout or derive it from the active cluster backend."""
+
+    if requested_timeout is not None:
+        if requested_timeout <= 0:
+            raise ValueError("--timeout must be greater than zero.")
+        return requested_timeout
+
+    cluster_config = config.get("cluster", {})
+    cluster_type = cluster_config.get("type", "local")
+    backend_config = cluster_config.get(cluster_type, {})
+    walltime = backend_config.get("walltime")
+
+    if walltime is not None:
+        return parse_walltime_seconds(walltime)
+
+    return 3600
+
+
 
 def execute_notebook(
     nb: nbformat.NotebookNode,
@@ -267,7 +325,9 @@ def main() -> None:
     output_path = output_path.resolve()
 
     log_step(f"Loading configuration: {config_path}")
-    load_config(config_path)
+    config = load_config(config_path)
+    timeout = resolve_notebook_timeout(config, args.timeout)
+    log_step(f"Notebook per-cell timeout: {timeout} seconds")
     log_step(f"Loading notebook template: {notebook_path}")
     nb = nbformat.read(notebook_path, as_version=4)
     log_step("Executing notebook")
@@ -275,7 +335,7 @@ def main() -> None:
         nb,
         notebook_path=notebook_path,
         config_path=config_path,
-        timeout=args.timeout,
+        timeout=timeout,
         kernel_name=args.kernel_name,
     )
 

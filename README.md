@@ -107,6 +107,11 @@ python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
+The per-cell execution timeout defaults to the `walltime` of the active cluster
+backend (for example, `cluster.slurm.walltime`). If that backend has no
+configured walltime, the fallback is 3600 seconds. Pass `--timeout SECONDS` to
+override the derived value explicitly.
+
 Run the PostgreSQL report (connection details are described below):
 
 ```bash
@@ -148,6 +153,17 @@ Each available catalog entry in `catalogs` requires:
 - `path`: input parquet file or directory.
 - `parquet_pattern`: file pattern used when `path` is a directory. The
   default is `*.parquet`.
+- `parquet_read`: optional Dask read tuning for non-HATS catalogs. Supported
+  keys are `aggregate_files`, `split_row_groups`, and `blocksize`. For a large
+  catalog composed of many small files, a typical configuration is:
+
+  ```yaml
+  parquet_read:
+    aggregate_files: true
+    split_row_groups: adaptive
+    blocksize: 256MiB
+  ```
+
 - `omit_paths`: when `true`, the catalog path is not included in the rendered
   report. It defaults to `false` for backward compatibility.
 
@@ -198,7 +214,8 @@ The HATS metadata also supplies the total row count without reading catalog
 rows. Non-HATS inputs continue to be
 read directly with `dask.dataframe.read_parquet`; their `basic_statistics`
 percentiles from Dask `describe()` are approximate, and `count` excludes null
-entries. The report names any selected columns omitted by Dask's default
+entries. Their total row count is obtained from Parquet footer metadata without
+scanning a data column. The report names any selected columns omitted by Dask's default
 data-type selection. Both inputs use the same YAML
 sections and options, apart from the HATS-only `plot_pixels` and
 `plot_coverage` sections.
@@ -367,6 +384,46 @@ These checks prevent accidental large Dask graphs and heavy reductions. If a
 wide run is scientifically required, opt in explicitly in the YAML so the report
 configuration records that choice.
 
+`basic_statistics.group_by` renders one level-4 subsection per configured value.
+This is useful when statistics such as flux distributions should not be mixed
+across bands:
+
+```yaml
+basic_statistics:
+  columns: [coord_ra, coord_dec, psfFlux, psfFluxErr]
+  group_by:
+    column: band
+    values: [u, g, r, i, z, y]
+    label: Band
+    split_every: 8
+```
+
+Without `path_template`, the projected columns are read once and all groups are
+reduced together with distributed `count`, `mean`, `std`, `min`, and `max`
+aggregations. Percentiles are intentionally omitted on this path to avoid six
+independent scans and large intermediate graphs. `split_every` controls the tree
+reduction fan-in and defaults to 8.
+
+If the catalog is physically partitioned into subdirectories, an optional
+template reads only the files for each value. Since those file sets are disjoint,
+their `describe()` reductions can run in parallel without rereading data:
+
+```yaml
+  group_by:
+    column: band
+    values: [u, g, r, i, z, y]
+    label: Band
+    path_template: '{value}'
+```
+
+Group paths are resolved below the catalog root; templates that escape that root
+are rejected. `path_template` is available only for ordinary Parquet catalogs.
+For HATS catalogs, LSDB first opens only the configured statistics columns and
+the grouping column. Because LSDB does not expose a native grouped aggregation,
+only that projected catalog is converted with `to_dask_dataframe()` for the
+single distributed tree reduction; other HATS statistics continue to use native
+Parquet footer metadata without scanning rows.
+
 ### Exact Unique Counts
 
 `unique_count` always reports an exact global count or fails. It never reports an
@@ -469,6 +526,17 @@ to `NaN` in the Dask expression and are excluded by the existing finite-value
 filters used by histograms and distribution statistics. The same rule is applied
 to invalid flux or flux-error values in magnitude-error conversion.
 
+Magnitude and magnitude-error inputs are projected together and converted once
+per partition. Their plotting histograms and descriptive-statistics summaries
+are accumulated in the same partition pass, while retaining independent ranges
+and bin grids for each product. The lazy magnitude and magnitude-error plans are
+then submitted in one `dask.compute` call so they can share upstream catalog-read
+and conversion tasks. The magnitude-error 2D trends participate in that same
+submission and reuse the same projected, converted partitions. HATS inputs
+remain on the native LSDB path, using projected `lsdb.open_catalog` reads and
+`Catalog.map_partitions`; they are not converted to a Dask DataFrame for this
+workflow.
+
 For HATS catalogs, magnitude and magnitude-error statistics estimate configured
 quantiles from the same fixed-bin histogram used for the other statistics. This
 avoids a second read and a separate distributed quantile calculation for each
@@ -476,10 +544,14 @@ band and model. Count, mean, threshold fractions, and out-of-range counts still
 come directly from the values. Quantile resolution is set by
 `statistics.peak_bin_width` (0.1 mag and 0.01 mag error in the production YAML).
 The report marks these estimates with `≈` and rounds them to the bin width.
-Non-HATS catalogs keep the existing approximate Dask quantile calculation. The
-report also marks these quantiles with `≈`. To request this method for a HATS
-section, set `quantile_method: dask` under that section's
-`statistics` mapping; `quantile_method: histogram` is also available explicitly.
+Non-HATS catalogs use the approximate Dask quantile calculation by default. The
+report also marks these quantiles with `≈`. When both Parquet photometry sections
+explicitly set `quantile_method: histogram`, the pipeline uses one bounded-memory
+partition reduction for magnitude statistics, magnitude-error statistics, and
+their trends. It converts and summarizes one column or pair at a time instead of
+materializing copied DataFrames for all photometric columns. To request the Dask
+method explicitly, set `quantile_method: dask`; `quantile_method: histogram` is
+available for both Parquet and HATS inputs.
 
 ### Magnitude-Error Trends
 
@@ -491,8 +563,10 @@ default. It uses all configured
 `gaap1p0FluxErr`.
 
 The plot computes a 2D histogram per model and magnitude bin. The line is the
-binned mean magnitude error, and the shaded region is the configured approximate
-quantile range measured from the binned error distribution.
+exact arithmetic mean magnitude error of paired-valid rows, accumulated as
+`sum(error) / count` without replacing measurements by error-bin centers. The
+shaded region is the configured approximate quantile range measured from the
+binned error distribution.
 
 ```yaml
 magnitude_error_trends:

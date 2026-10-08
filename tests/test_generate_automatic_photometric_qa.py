@@ -1,4 +1,5 @@
 import ast
+from datetime import date
 import importlib.util
 import os
 from pathlib import Path
@@ -90,6 +91,51 @@ class LoadConfigTest(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "from_database must be true or false"):
             self.load(config)
+
+
+class LastVerifiedRunTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        notebook = nbformat.read(NOTEBOOK_PATH, as_version=4)
+        source = next(
+            cell.source
+            for cell in notebook.cells
+            if cell.get("id") == "initial-configuration"
+        )
+        tree = ast.parse(source)
+        selected_nodes = [
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef)
+            and node.name == "resolve_last_verified_run"
+        ]
+        cls.namespace = {"date": date}
+        exec(
+            compile(
+                ast.Module(selected_nodes, type_ignores=[]),
+                str(NOTEBOOK_PATH),
+                "exec",
+            ),
+            cls.namespace,
+        )
+
+    def test_auto_uses_current_system_date(self):
+        self.assertEqual(
+            self.namespace["resolve_last_verified_run"]("auto"),
+            date.today().isoformat(),
+        )
+
+    def test_missing_value_defaults_to_current_system_date(self):
+        self.assertEqual(
+            self.namespace["resolve_last_verified_run"](),
+            date.today().isoformat(),
+        )
+
+    def test_explicit_value_is_preserved(self):
+        self.assertEqual(
+            self.namespace["resolve_last_verified_run"]("2026-08-25"),
+            "2026-08-25",
+        )
 
 
 class NotebookTimeoutTest(unittest.TestCase):

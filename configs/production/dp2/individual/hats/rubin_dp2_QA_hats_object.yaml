@@ -1,14 +1,13 @@
 notebook:
-  title: Rubin DP2 — scrambled local sample
-  subtitle: Basic dataset characterization
+  title: Rubin DP2 - HATS - object
+  subtitle: Basic characterization of the release catalogs
   last_verified_run: auto
   introduction: This notebook provides lightweight statistics and diagnostic plots
-    for quick characterization of the data product.
+    for quick characterization of the release catalogs.
 catalogs:
-- title: Rubin DP2 — scrambled local sample
+- title: object
   omit_paths: true
-  path: ../data/sample/rubin_dp2_1000_sample_scrambled.parquet
-  parquet_pattern: '*.parquet'
+  path: <path-to-data-on-data>/object_collection
   basic_statistics:
     columns:
     - objectId
@@ -20,18 +19,18 @@ catalogs:
     - detect_isIsolated
     - detect_fromBlend
     - detect_isDeblendedModelSource
-    - u_cModelMag
-    - u_cModelMagErr
-    - g_cModelMag
-    - g_cModelMagErr
-    - r_cModelMag
-    - r_cModelMagErr
-    - i_cModelMag
-    - i_cModelMagErr
-    - z_cModelMag
-    - z_cModelMagErr
-    - y_cModelMag
-    - y_cModelMagErr
+    - u_cModelFlux
+    - u_cModelFluxErr
+    - g_cModelFlux
+    - g_cModelFluxErr
+    - r_cModelFlux
+    - r_cModelFluxErr
+    - i_cModelFlux
+    - i_cModelFluxErr
+    - z_cModelFlux
+    - z_cModelFluxErr
+    - y_cModelFlux
+    - y_cModelFluxErr
     default_first_n: 20
     max_columns: 100
   unique_count:
@@ -46,7 +45,7 @@ catalogs:
     split_every: 8
     title_suffix: Spatial Distribution
     footprints:
-    - path: ../data/footprints/des_round19_footprint.csv
+    - path: <path-to-footprint-data>/des_round19_footprint.csv
       label: DES Round 19 footprint
       color: blue
       type: regions
@@ -56,7 +55,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: ../data/footprints/rubin_dp2_footprint.csv
+    - path: <path-to-footprint-data>/rubin_dp2_footprint.csv
       label: Rubin DP2 footprint
       color: red
       type: regions
@@ -66,7 +65,7 @@ catalogs:
       ring_type_column: ring_type
       exterior_value: exterior
       vertex_column: vertex_id
-    - path: ../data/footprints/rubin_footprint.csv
+    - path: <path-to-footprint-data>/rubin_footprint.csv
       label: Rubin footprint
       color: orange
       type: curve
@@ -78,7 +77,7 @@ catalogs:
     dec_column: coord_dec
     order: 12
     split_every: 8
-    split_out: 8
+    split_out: 64
   magnitudes:
     bands:
     - u
@@ -88,19 +87,19 @@ catalogs:
     - z
     - y
     models:
-    - psfMag
-    - kronMag
-    - cModelMag
+    - psfFlux
+    - kronFlux
+    - cModelFlux
     - gaap1p0Flux
     model_labels:
-      psfMag: PSF
-      kronMag: Kron
-      cModelMag: cModel
+      psfFlux: PSF
+      kronFlux: Kron
+      cModelFlux: cModel
       gaap1p0Flux: GAaP 1.0
     model_colors:
-      psfMag: tab:blue
-      kronMag: tab:orange
-      cModelMag: tab:green
+      psfFlux: tab:blue
+      kronFlux: tab:orange
+      cModelFlux: tab:green
       gaap1p0Flux: tab:red
     histogram:
       bins: 80
@@ -124,19 +123,19 @@ catalogs:
     mag_offset: 31.4
   magnitude_errors:
     models:
-    - psfMagErr
-    - kronMagErr
-    - cModelMagErr
+    - psfFluxErr
+    - kronFluxErr
+    - cModelFluxErr
     - gaap1p0FluxErr
     model_labels:
-      psfMagErr: PSF
-      kronMagErr: Kron
-      cModelMagErr: cModel
+      psfFluxErr: PSF
+      kronFluxErr: Kron
+      cModelFluxErr: cModel
       gaap1p0FluxErr: GAaP 1.0
     model_colors:
-      psfMagErr: tab:blue
-      kronMagErr: tab:orange
-      cModelMagErr: tab:green
+      psfFluxErr: tab:blue
+      kronFluxErr: tab:orange
+      cModelFluxErr: tab:green
       gaap1p0FluxErr: tab:red
     histogram:
       bins: 80
@@ -181,22 +180,25 @@ catalogs:
     min_count: 1
     fill_alpha: 0.15
     split_every: 8
+  plot_pixels:
+    projection: MOL
+  plot_coverage: {}
 cluster:
-  type: local
+  type: slurm
   local:
-    n_workers: 1
-    cores: 1
+    n_workers: 3
+    cores: 2
     memory: 2GB
   slurm:
-    n_workers: 30
-    queue: cpu
-    account: hpc-public
+    n_workers: 22
+    queue: cpu_pipelines
+    account: hpc-pipelines
     interface: ib0
     cores: 2
     processes: 1
     memory: 32GB
-    walltime: 02:00:00
+    walltime: 12:00:00
     adapt:
-      minimum_jobs: 30
-      maximum_jobs: 30
-    wait_for_workers: 30
+      minimum_jobs: 22
+      maximum_jobs: 22
+    wait_for_workers: 22

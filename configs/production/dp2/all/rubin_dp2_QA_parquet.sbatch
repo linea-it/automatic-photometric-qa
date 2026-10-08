@@ -40,7 +40,7 @@ echo "Python: ${PYTHON_EXECUTABLE}"
 echo "Driver resources: ${DRIVER_CPUS} CPUs, ${SLURM_MEM_PER_NODE:-unknown} MiB"
 
 "${PYTHON_EXECUTABLE}" scripts/generate_automatic_photometric_qa.py \
-    configs/production/rubin_dp2_QA_parquet.yaml \
+    configs/production/dp2/all/rubin_dp2_QA_parquet.yaml \
     --output outputs/rubin_dp2_QA_parquet.html \
     --executed-notebook outputs/rubin_dp2_QA_parquet.ipynb \
     --hide-code

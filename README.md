@@ -92,14 +92,14 @@ python scripts/generate_automatic_photometric_qa.py configs/automatic_photometri
 Run a production configuration from the repository root (DP2 HATS example):
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/dp2/all/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html
 ```
 
 Optionally save the executed notebook used to generate the HTML:
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp2_QA_hats.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/dp2/all/rubin_dp2_QA_hats.yaml \
   --output outputs/automatic_photometric_qa.html \
   --executed-notebook outputs/automatic_photometric_qa_executed.ipynb
 ```
@@ -115,7 +115,7 @@ override the derived value explicitly.
 Run the PostgreSQL report (connection details are described below):
 
 ```bash
-python scripts/generate_automatic_photometric_qa.py configs/production/rubin_dp1_QA_postgres.yaml \
+python scripts/generate_automatic_photometric_qa.py configs/production/dp1/all/rubin_dp1_QA_postgres.yaml \
   --output outputs/rubin_dp1_QA_postgres.html \
   --hide-code
 ```
@@ -143,7 +143,9 @@ selected statistics, plots, and survey footprints.
 
 Required global YAML sections for Parquet and HATS inputs:
 
-- `notebook`: report title, subtitle, optional introduction, and last verified run date.
+- `notebook`: report title, subtitle, optional introduction, and last verified run
+  date. Set `last_verified_run: auto` (or omit it) to use the system date when
+  the report executes.
 - `catalogs`: one or more catalog configurations.
 - `cluster`: Dask backend configuration shared by all catalogs.
 
@@ -321,7 +323,7 @@ Minimal multi-catalog structure:
 notebook:
   title: Rubin QA Report
   subtitle: Basic dataset characterization
-  last_verified_run: '2026-08-25'
+  last_verified_run: auto
   introduction: >
     This notebook provides lightweight statistics and diagnostic plots for quick
     characterization of the data product.

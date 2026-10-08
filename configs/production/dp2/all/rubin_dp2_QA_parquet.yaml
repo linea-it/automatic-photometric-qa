@@ -1,13 +1,13 @@
 notebook:
   title: Rubin DP2 - Parquet
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-09-21'
+  last_verified_run: auto
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
 - title: deep_coadd_input_summary
   omit_paths: true
-  path: <path-to-data>/deep_coadd_input_summary
+  path: <path-to-data-on-mnt>/deep_coadd_input_summary
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -19,7 +19,7 @@ catalogs:
     max_unique_values: 10000
 - title: dia_object
   omit_paths: true
-  path: <path-to-data>/dia_object
+  path: <path-to-data-on-mnt>/dia_object
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -88,7 +88,7 @@ catalogs:
     split_out: 64
 - title: dia_object_forced_source
   omit_paths: true
-  path: <path-to-data>/dia_object_forced_source
+  path: <path-to-data-on-mnt>/dia_object_forced_source
   parquet_pattern: '*.parq'
   parquet_read:
     aggregate_files: true
@@ -154,7 +154,7 @@ catalogs:
     split_out: 64
 - title: dia_source
   omit_paths: true
-  path: <path-to-data>/dia_source
+  path: <path-to-data-on-mnt>/dia_source
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -223,7 +223,7 @@ catalogs:
     split_out: 64
 - title: isolated_star_stellar_motions
   omit_paths: true
-  path: <path-to-data>/isolated_star_stellar_motions
+  path: <path-to-data-on-mnt>/isolated_star_stellar_motions
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -287,7 +287,7 @@ catalogs:
     split_out: 64
 - title: object
   omit_paths: true
-  path: <path-to-data>/object
+  path: <path-to-data-on-data>/object
   parquet_pattern: '*.parq'
   parquet_read:
     aggregate_files: false
@@ -466,7 +466,7 @@ catalogs:
     split_every: 8
 - title: object_forced_source
   omit_paths: true
-  path: <path-to-data>/object_forced_source
+  path: <path-to-data-on-data>/object_forced_source
   parquet_pattern: '*.parq'
   parquet_read:
     aggregate_files: true
@@ -532,7 +532,7 @@ catalogs:
     split_out: 64
 - title: object_shear_all
   omit_paths: true
-  path: <path-to-data>/object_shear_all
+  path: <path-to-data-on-data>/object_shear_all
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -603,7 +603,7 @@ catalogs:
     split_out: 64
 - title: source
   omit_paths: true
-  path: <path-to-data>/source
+  path: <path-to-data-on-data>/source
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -677,7 +677,7 @@ catalogs:
     split_out: 64
 - title: ss_object
   omit_paths: true
-  path: <path-to-data>/ss_object
+  path: <path-to-data-on-mnt>/ss_object
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -705,7 +705,7 @@ catalogs:
     max_columns: 21
 - title: ss_source
   omit_paths: true
-  path: <path-to-data>/ss_source
+  path: <path-to-data-on-mnt>/ss_source
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:
@@ -733,7 +733,7 @@ catalogs:
     max_columns: 21
 - title: visit_detector_table
   omit_paths: true
-  path: <path-to-data>/visit_detector_table
+  path: <path-to-data-on-mnt>/visit_detector_table
   parquet_pattern: '*.parq'
   basic_statistics:
     columns:

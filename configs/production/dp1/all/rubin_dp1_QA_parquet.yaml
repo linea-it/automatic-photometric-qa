@@ -1,13 +1,14 @@
 notebook:
-  title: Rubin DP1 - HATS
+  title: Rubin DP1 - Parquet
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-09-21'
+  last_verified_run: auto
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
 - title: object
   omit_paths: true
-  path: <full-path-to-hats-collection-folder>
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
   basic_statistics:
     columns:
     - objectId
@@ -102,6 +103,7 @@ catalogs:
       - -2
       - 35
       peak_bin_width: 0.1
+      quantile_method: histogram
       thresholds: []
       quantiles:
       - 0.16
@@ -137,6 +139,7 @@ catalogs:
       - 0
       - 8
       peak_bin_width: 0.01
+      quantile_method: histogram
       thresholds:
       - 0.1
       - 0.2
@@ -168,9 +171,25 @@ catalogs:
     min_count: 1
     fill_alpha: 0.15
     split_every: 8
-  plot_pixels:
-    projection: MOL
-  plot_coverage: {}
+- title: ss_object
+  omit_paths: true
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
+  basic_statistics:
+    columns:
+    - ssObjectId
+    - numObs
+    - discoverySubmissionDate
+    default_first_n: 20
+    max_columns: 100
+- title: ss_source
+  omit_paths: true
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
+  basic_statistics:
+    columns: ['phaseAngle', 'heliocentricDist', 'topocentricDist', 'heliocentricX', 'heliocentricY', 'heliocentricZ', 'heliocentricVX', 'heliocentricVY', 'heliocentricVZ', 'topocentricX', 'topocentricY', 'topocentricZ', 'topocentricVX', 'topocentricVY', 'topocentricVZ', 'ssObjectId', 'residualRa', 'residualDec', 'diaSourceId', 'galacticL', 'galacticB', 'eclipticLambda', 'eclipticBeta']
+    default_first_n: 20
+    max_columns: 100
 cluster:
   type: slurm
   local:

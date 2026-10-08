@@ -777,6 +777,7 @@ class GroupedBasicStatisticsTest(unittest.TestCase):
         function_names = {
             "get_basic_statistics_group_config",
             "get_basic_statistics_group_files",
+            "promote_low_precision_float_columns",
             "compute_grouped_basic_statistics",
         }
         selected_nodes = [
@@ -879,6 +880,25 @@ class GroupedBasicStatisticsTest(unittest.TestCase):
         projected_catalog.to_dask_dataframe.assert_called_once_with()
         self.assertEqual(result[0][1].loc["mean", "flux"], 2.0)
         self.assertEqual(result[1][1].loc["mean", "flux"], 10.0)
+
+    def test_arrow_float32_is_promoted_before_large_group_reductions(self):
+        frame = dd.from_pandas(
+            pd.DataFrame(
+                {
+                    "band": ["u", "g"],
+                    "flux": pd.Series([1.0, 2.0], dtype="float32[pyarrow]"),
+                    "identifier": pd.Series([1, 2], dtype="int64[pyarrow]"),
+                }
+            ),
+            npartitions=1,
+        )
+
+        promoted = self.namespace["promote_low_precision_float_columns"](
+            frame, ["flux", "identifier"]
+        )
+
+        self.assertEqual(promoted.dtypes["flux"], np.dtype("float64"))
+        self.assertEqual(str(promoted.dtypes["identifier"]), "int64[pyarrow]")
 
     def test_path_template_cannot_escape_catalog_root(self):
         context = {

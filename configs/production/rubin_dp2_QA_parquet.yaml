@@ -161,6 +161,8 @@ catalogs:
     - midpointMjdTai
     - coord_ra
     - coord_dec
+    - ra
+    - dec
     - raErr
     - decErr
     - snr
@@ -179,8 +181,8 @@ catalogs:
     - bboxSize
     max_columns: 21
   spatial_distribution:
-    ra_column: coord_ra
-    dec_column: coord_dec
+    ra_column: ra
+    dec_column: dec
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
@@ -214,8 +216,8 @@ catalogs:
       dec_column: dec_limit
       sort_by: ra_center
   survey_area:
-    ra_column: coord_ra
-    dec_column: coord_dec
+    ra_column: ra
+    dec_column: dec
     order: 12
     split_every: 8
     split_out: 64

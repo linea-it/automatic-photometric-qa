@@ -467,6 +467,82 @@ class ParquetIndexHandlingTest(unittest.TestCase):
         self.assertEqual(result, 2)
 
 
+class SpatialHistogramTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        notebook = nbformat.read(NOTEBOOK_PATH, as_version=4)
+        source = next(
+            cell.source
+            for cell in notebook.cells
+            if cell.get("id") == "imports-and-helpers"
+        )
+        tree = ast.parse(source)
+        function_names = {"_qa_partition_histogram2d_array", "qa_histogram2d"}
+        selected_nodes = [
+            node
+            for node in tree.body
+            if isinstance(node, ast.FunctionDef) and node.name in function_names
+        ]
+        cls.namespace = {
+            "da": da,
+            "dask": dask,
+            "delayed": delayed,
+            "np": np,
+            "pd": pd,
+        }
+        exec(
+            compile(
+                ast.Module(selected_nodes, type_ignores=[]),
+                str(NOTEBOOK_PATH),
+                "exec",
+            ),
+            cls.namespace,
+        )
+
+    def test_histogram_submits_bounded_partition_batches(self):
+        pandas_frame = pd.DataFrame(
+            {
+                "ra": [0.0, 45.0, 90.0, 180.0, 270.0],
+                "dec": [0.0, 10.0, -10.0, 20.0, -20.0],
+            }
+        )
+        frame = dd.from_pandas(pandas_frame, npartitions=5)
+        xedges = np.linspace(-np.pi, np.pi, 9)
+        yedges = np.linspace(-np.pi / 2.0, np.pi / 2.0, 5)
+
+        with dask.config.set(scheduler="synchronous"), mock.patch.object(
+            dask, "compute", wraps=dask.compute
+        ) as compute:
+            result = self.namespace["qa_histogram2d"](
+                frame,
+                "ra",
+                "dec",
+                xedges,
+                yedges,
+                split_every=2,
+                partition_batch_size=2,
+            )
+
+        expected = self.namespace["_qa_partition_histogram2d_array"](
+            pandas_frame, "ra", "dec", xedges, yedges
+        )
+        np.testing.assert_array_equal(result, expected)
+        self.assertEqual(compute.call_count, 3)
+
+    def test_partition_batch_size_must_be_positive(self):
+        frame = dd.from_pandas(pd.DataFrame({"ra": [], "dec": []}), npartitions=1)
+
+        with self.assertRaisesRegex(ValueError, "partition_batch_size"):
+            self.namespace["qa_histogram2d"](
+                frame,
+                "ra",
+                "dec",
+                np.linspace(-np.pi, np.pi, 3),
+                np.linspace(-np.pi / 2.0, np.pi / 2.0, 3),
+                partition_batch_size=0,
+            )
+
+
 class PhotometryOptimizationTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -607,6 +683,49 @@ class PhotometryOptimizationTest(unittest.TestCase):
         )
         self.assertTrue(result["g_psfFlux"].iloc[3:].isna().all())
         self.assertTrue(result["g_psfFluxErr"].iloc[3:].isna().all())
+
+    def test_precomputed_magnitudes_and_errors_are_used_directly(self):
+        frame = dd.from_pandas(
+            pd.DataFrame(
+                {
+                    "g_psfMag": [20.0, 21.0],
+                    "g_psfMagErr": [0.1, 0.2],
+                    "g_kronFlux": [100.0, 10.0],
+                    "g_kronFluxErr": [10.0, 2.0],
+                }
+            ),
+            npartitions=1,
+        )
+        reader = mock.Mock(return_value=frame)
+        self.namespace["read_catalog_columns"] = reader
+        magnitudes_config = {
+            "bands": ["g"],
+            "models": ["psfMag", "kronFlux"],
+            "mag_offset": 31.4,
+        }
+        errors_config = {"models": ["psfMagErr", "kronFluxErr"]}
+
+        source, _ = self.namespace["make_photometry_source"](
+            {"kind": "parquet"},
+            magnitudes_config=magnitudes_config,
+            magnitude_errors_config=errors_config,
+        )
+        result = source.compute()
+
+        reader.assert_called_once_with(
+            {"kind": "parquet"},
+            columns=["g_kronFlux", "g_kronFluxErr", "g_psfMag", "g_psfMagErr"],
+        )
+        np.testing.assert_allclose(result["g_psfMag"], [20.0, 21.0])
+        np.testing.assert_allclose(result["g_psfMagErr"], [0.1, 0.2])
+        np.testing.assert_allclose(
+            result["g_kronFlux"],
+            31.4 - 2.5 * np.log10([100.0, 10.0]),
+        )
+        np.testing.assert_allclose(
+            result["g_kronFluxErr"],
+            2.5 / np.log(10.0) * np.array([0.1, 0.2]),
+        )
 
     def test_combined_products_are_lazy_and_preserve_scientific_selections(self):
         reader = mock.Mock(return_value=self.raw_source())

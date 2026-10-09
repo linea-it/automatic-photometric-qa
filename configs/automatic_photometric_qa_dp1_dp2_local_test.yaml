@@ -44,6 +44,7 @@ catalogs:
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
+    partition_batch_size: 256
     title_suffix: Spatial Distribution
     footprints:
     - path: ../data/footprints/des_round19_footprint.csv
@@ -212,6 +213,7 @@ catalogs:
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
+    partition_batch_size: 256
     title_suffix: Spatial Distribution
     footprints:
     - path: ../data/footprints/des_round19_footprint.csv

@@ -201,6 +201,13 @@ appear for that catalog. The basic product information section always runs for
 each catalog: catalog size, total row count, total column count, and a scrollable
 table containing column names and data types.
 
+`spatial_distribution.partition_batch_size` limits how many catalog partitions
+are submitted in one histogram graph. It defaults to 256 so catalogs with tens
+of thousands of partitions do not exhaust driver or scheduler memory. Lower the
+value for a smaller driver allocation, or raise it to reduce submission overhead
+when more driver memory is available. Each batch is reduced before the next one
+is built, and the final histogram remains exact.
+
 Catalog paths that contain `collection.properties` or `hats.properties` are
 treated as HATS catalogs. The primary table is opened with
 `lsdb.open_catalog(primary_catalog_path, columns="all")` to inspect its schema,
@@ -348,6 +355,8 @@ catalogs:
       dec_column: coord_dec
       ra_edge_count: 180
       dec_edge_count: 90
+      split_every: 8
+      partition_batch_size: 256
       title_suffix: Spatial Distribution
     survey_area:
       ra_column: coord_ra

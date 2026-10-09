@@ -43,6 +43,7 @@ catalogs:
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
+    partition_batch_size: 256
     title_suffix: Spatial Distribution
     footprints:
     - path: <path-to-footprint-data>/des_round19_footprint.csv
@@ -87,19 +88,19 @@ catalogs:
     - z
     - y
     models:
-    - psfFlux
+    - psfMag
     - kronFlux
-    - cModelFlux
+    - cModelMag
     - gaap1p0Flux
     model_labels:
-      psfFlux: PSF
+      psfMag: PSF
       kronFlux: Kron
-      cModelFlux: cModel
+      cModelMag: cModel
       gaap1p0Flux: GAaP 1.0
     model_colors:
-      psfFlux: tab:blue
+      psfMag: tab:blue
       kronFlux: tab:orange
-      cModelFlux: tab:green
+      cModelMag: tab:green
       gaap1p0Flux: tab:red
     histogram:
       bins: 80
@@ -123,19 +124,19 @@ catalogs:
     mag_offset: 31.4
   magnitude_errors:
     models:
-    - psfFluxErr
+    - psfMagErr
     - kronFluxErr
-    - cModelFluxErr
+    - cModelMagErr
     - gaap1p0FluxErr
     model_labels:
-      psfFluxErr: PSF
+      psfMagErr: PSF
       kronFluxErr: Kron
-      cModelFluxErr: cModel
+      cModelMagErr: cModel
       gaap1p0FluxErr: GAaP 1.0
     model_colors:
-      psfFluxErr: tab:blue
+      psfMagErr: tab:blue
       kronFluxErr: tab:orange
-      cModelFluxErr: tab:green
+      cModelMagErr: tab:green
       gaap1p0FluxErr: tab:red
     histogram:
       bins: 80

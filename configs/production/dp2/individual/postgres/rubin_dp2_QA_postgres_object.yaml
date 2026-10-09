@@ -1,0 +1,59 @@
+notebook:
+  title: Rubin DP2 - PostgreSQL
+  subtitle: Basic characterization of the object catalog
+  last_verified_run: auto
+  introduction: This notebook provides lightweight statistics for the DP2 object catalog.
+
+from_database: true
+
+database:
+  # PGHOST, PGDATABASE, PGUSER, PGPASSWORD, and PGPORT take precedence.
+  credentials_file: ~/.pgcredential
+  connect_timeout: 15
+  list_objects: false
+
+catalogs:
+  - title: object
+    schema: lsst_dp2
+    table: object
+    preview:
+      rows: 5
+      columns:
+        - object_id
+        - coord_ra
+        - coord_dec
+        - ref_extendedness
+        - ref_size_extendedness
+        - u_c_model_flux
+        - u_c_model_flux_err
+        - g_c_model_flux
+        - g_c_model_flux_err
+        - r_c_model_flux
+        - r_c_model_flux_err
+        - i_c_model_flux
+        - i_c_model_flux_err
+        - z_c_model_flux
+        - z_c_model_flux_err
+        - y_c_model_flux
+        - y_c_model_flux_err
+    basic_statistics:
+      columns:
+        - object_id
+        - coord_ra
+        - coord_dec
+        - ref_extendedness
+        - ref_size_extendedness
+        - u_c_model_flux
+        - u_c_model_flux_err
+        - g_c_model_flux
+        - g_c_model_flux_err
+        - r_c_model_flux
+        - r_c_model_flux_err
+        - i_c_model_flux
+        - i_c_model_flux_err
+        - z_c_model_flux
+        - z_c_model_flux_err
+        - y_c_model_flux
+        - y_c_model_flux_err
+      default_first_n: 20
+      max_columns: 100

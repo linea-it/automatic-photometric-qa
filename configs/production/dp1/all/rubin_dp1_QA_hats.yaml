@@ -1,7 +1,7 @@
 notebook:
   title: Rubin DP1 - HATS
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-09-21'
+  last_verified_run: auto
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
@@ -43,6 +43,7 @@ catalogs:
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
+    partition_batch_size: 256
     title_suffix: Spatial Distribution
     footprints:
     - path: <full-path-to-footprint-data>/des_round19_footprint.csv

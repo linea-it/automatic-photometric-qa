@@ -1,13 +1,14 @@
 notebook:
-  title: Rubin DP2 - HATS
+  title: Rubin DP1 - Parquet
   subtitle: Basic characterization of the release catalogs
-  last_verified_run: '2026-09-21'
+  last_verified_run: auto
   introduction: This notebook provides lightweight statistics and diagnostic plots
     for quick characterization of the release catalogs.
 catalogs:
 - title: object
   omit_paths: true
-  path: <full-path-to-hats-collection-folder>
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
   basic_statistics:
     columns:
     - objectId
@@ -19,18 +20,18 @@ catalogs:
     - detect_isIsolated
     - detect_fromBlend
     - detect_isDeblendedModelSource
-    - u_cModelMag
-    - u_cModelMagErr
-    - g_cModelMag
-    - g_cModelMagErr
-    - r_cModelMag
-    - r_cModelMagErr
-    - i_cModelMag
-    - i_cModelMagErr
-    - z_cModelMag
-    - z_cModelMagErr
-    - y_cModelMag
-    - y_cModelMagErr
+    - u_cModelFlux
+    - u_cModelFluxErr
+    - g_cModelFlux
+    - g_cModelFluxErr
+    - r_cModelFlux
+    - r_cModelFluxErr
+    - i_cModelFlux
+    - i_cModelFluxErr
+    - z_cModelFlux
+    - z_cModelFluxErr
+    - y_cModelFlux
+    - y_cModelFluxErr
     default_first_n: 20
     max_columns: 100
   unique_count:
@@ -43,21 +44,12 @@ catalogs:
     ra_edge_count: 180
     dec_edge_count: 90
     split_every: 8
+    partition_batch_size: 256
     title_suffix: Spatial Distribution
     footprints:
     - path: <full-path-to-footprint-data>/des_round19_footprint.csv
       label: DES Round 19 footprint
       color: blue
-      type: regions
-      ra_column: ra_deg
-      dec_column: dec_deg
-      region_column: region_id
-      ring_type_column: ring_type
-      exterior_value: exterior
-      vertex_column: vertex_id
-    - path: <full-path-to-footprint-data>/rubin_dp2_footprint.csv
-      label: Rubin DP2 footprint
-      color: red
       type: regions
       ra_column: ra_deg
       dec_column: dec_deg
@@ -87,19 +79,19 @@ catalogs:
     - z
     - y
     models:
-    - psfMag
-    - kronMag
-    - cModelMag
+    - psfFlux
+    - kronFlux
+    - cModelFlux
     - gaap1p0Flux
     model_labels:
-      psfMag: PSF
-      kronMag: Kron
-      cModelMag: cModel
+      psfFlux: PSF
+      kronFlux: Kron
+      cModelFlux: cModel
       gaap1p0Flux: GAaP 1.0
     model_colors:
-      psfMag: tab:blue
-      kronMag: tab:orange
-      cModelMag: tab:green
+      psfFlux: tab:blue
+      kronFlux: tab:orange
+      cModelFlux: tab:green
       gaap1p0Flux: tab:red
     histogram:
       bins: 80
@@ -112,6 +104,7 @@ catalogs:
       - -2
       - 35
       peak_bin_width: 0.1
+      quantile_method: histogram
       thresholds: []
       quantiles:
       - 0.16
@@ -122,19 +115,19 @@ catalogs:
     mag_offset: 31.4
   magnitude_errors:
     models:
-    - psfMagErr
-    - kronMagErr
-    - cModelMagErr
+    - psfFluxErr
+    - kronFluxErr
+    - cModelFluxErr
     - gaap1p0FluxErr
     model_labels:
-      psfMagErr: PSF
-      kronMagErr: Kron
-      cModelMagErr: cModel
+      psfFluxErr: PSF
+      kronFluxErr: Kron
+      cModelFluxErr: cModel
       gaap1p0FluxErr: GAaP 1.0
     model_colors:
-      psfMagErr: tab:blue
-      kronMagErr: tab:orange
-      cModelMagErr: tab:green
+      psfFluxErr: tab:blue
+      kronFluxErr: tab:orange
+      cModelFluxErr: tab:green
       gaap1p0FluxErr: tab:red
     histogram:
       bins: 80
@@ -147,6 +140,7 @@ catalogs:
       - 0
       - 8
       peak_bin_width: 0.01
+      quantile_method: histogram
       thresholds:
       - 0.1
       - 0.2
@@ -178,49 +172,25 @@ catalogs:
     min_count: 1
     fill_alpha: 0.15
     split_every: 8
-  plot_pixels:
-    projection: MOL
-  plot_coverage: {}
-- title: object_shear_all
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: object_scarlet_models
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: isolated_star_stellar_motions
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: source
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: object_forced_source
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_object
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_source
-  omit_paths: true
-  status: planned
-  markdown: To be done
-- title: dia_object_forced_source
-  omit_paths: true
-  status: planned
-  markdown: To be done
 - title: ss_object
   omit_paths: true
-  status: planned
-  markdown: To be done
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
+  basic_statistics:
+    columns:
+    - ssObjectId
+    - numObs
+    - discoverySubmissionDate
+    default_first_n: 20
+    max_columns: 100
 - title: ss_source
   omit_paths: true
-  status: planned
-  markdown: To be done
+  path: <full-path-to-catalog-folder>
+  parquet_pattern: '*.parq'
+  basic_statistics:
+    columns: ['phaseAngle', 'heliocentricDist', 'topocentricDist', 'heliocentricX', 'heliocentricY', 'heliocentricZ', 'heliocentricVX', 'heliocentricVY', 'heliocentricVZ', 'topocentricX', 'topocentricY', 'topocentricZ', 'topocentricVX', 'topocentricVY', 'topocentricVZ', 'ssObjectId', 'residualRa', 'residualDec', 'diaSourceId', 'galacticL', 'galacticB', 'eclipticLambda', 'eclipticBeta']
+    default_first_n: 20
+    max_columns: 100
 cluster:
   type: slurm
   local:
@@ -228,15 +198,15 @@ cluster:
     cores: 2
     memory: 2GB
   slurm:
-    n_workers: 28
+    n_workers: 20
     queue: cpu_pipelines
     account: hpc-pipelines
     interface: ib0
-    cores: 4
+    cores: 2
     processes: 1
-    memory: 24GB
+    memory: 32GB
     walltime: 02:00:00
     adapt:
-      minimum_jobs: 28
-      maximum_jobs: 28
-    wait_for_workers: 28
+      minimum_jobs: 20
+      maximum_jobs: 20
+    wait_for_workers: 20

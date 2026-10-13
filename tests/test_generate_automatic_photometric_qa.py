@@ -161,6 +161,22 @@ class NotebookTimeoutTest(unittest.TestCase):
 
         self.assertEqual(MODULE.resolve_notebook_timeout(config, 7200), 7200)
 
+    def test_yaml_timeout_takes_precedence_over_walltime(self):
+        config = {
+            "notebook": {"timeout": 7200},
+            "cluster": {"type": "slurm", "slurm": {"walltime": "12:00:00"}},
+        }
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, None), 7200)
+
+    def test_explicit_timeout_takes_precedence_over_yaml_timeout(self):
+        config = {
+            "notebook": {"timeout": 7200},
+            "cluster": {"type": "slurm", "slurm": {"walltime": "12:00:00"}},
+        }
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, 10800), 10800)
+
     def test_timeout_falls_back_when_backend_has_no_walltime(self):
         config = {"cluster": {"type": "local", "local": {}}}
 
@@ -169,6 +185,44 @@ class NotebookTimeoutTest(unittest.TestCase):
     def test_invalid_walltime_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "Invalid cluster walltime"):
             MODULE.parse_walltime_seconds("12:75:00")
+
+    def test_invalid_yaml_timeout_is_rejected(self):
+        with self.assertRaisesRegex(
+            ValueError, "notebook.timeout must be a positive integer"
+        ):
+            MODULE.resolve_notebook_timeout({"notebook": {"timeout": 0}}, None)
+
+    def test_walltime_must_not_be_shorter_than_yaml_timeout(self):
+        config = {
+            "notebook": {"timeout": 7200},
+            "cluster": {"type": "slurm", "slurm": {"walltime": "01:00:00"}},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"cluster\.slurm\.walltime must be greater than or equal",
+        ):
+            MODULE.resolve_notebook_timeout(config, None)
+
+    def test_walltime_may_equal_yaml_timeout(self):
+        config = {
+            "notebook": {"timeout": 7200},
+            "cluster": {"type": "slurm", "slurm": {"walltime": "02:00:00"}},
+        }
+
+        self.assertEqual(MODULE.resolve_notebook_timeout(config, None), 7200)
+
+    def test_walltime_must_not_be_shorter_than_explicit_timeout(self):
+        config = {
+            "notebook": {"timeout": 1800},
+            "cluster": {"type": "slurm", "slurm": {"walltime": "01:00:00"}},
+        }
+
+        with self.assertRaisesRegex(
+            ValueError,
+            r"cluster\.slurm\.walltime must be greater than or equal",
+        ):
+            MODULE.resolve_notebook_timeout(config, 7200)
 
 
 class SlurmWalltimeTest(unittest.TestCase):

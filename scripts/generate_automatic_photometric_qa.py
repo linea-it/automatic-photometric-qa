@@ -127,9 +127,10 @@ def parse_args() -> argparse.Namespace:
         "--timeout",
         type=int,
         help=(
-            "Per-cell execution timeout in seconds. By default, use the active "
-            "cluster backend walltime, falling back to 3600 seconds when no "
-            "walltime is configured."
+            "Per-cell execution timeout in seconds. Overrides notebook.timeout "
+            "from the YAML configuration. By default, use the active cluster "
+            "backend walltime, falling back to 3600 seconds when neither is "
+            "configured."
         ),
     )
     parser.add_argument(
@@ -252,22 +253,47 @@ def parse_walltime_seconds(walltime: str | int) -> int:
 
 
 def resolve_notebook_timeout(config: dict, requested_timeout: int | None) -> int:
-    """Return an explicit timeout or derive it from the active cluster backend."""
+    """Resolve the cell timeout and ensure it fits within the cluster walltime."""
 
     if requested_timeout is not None:
         if requested_timeout <= 0:
             raise ValueError("--timeout must be greater than zero.")
-        return requested_timeout
+
+    configured_timeout = config.get("notebook", {}).get("timeout")
+    if configured_timeout is not None:
+        if (
+            not isinstance(configured_timeout, int)
+            or isinstance(configured_timeout, bool)
+            or configured_timeout <= 0
+        ):
+            raise ValueError(
+                "notebook.timeout must be a positive integer number of seconds."
+            )
 
     cluster_config = config.get("cluster", {})
     cluster_type = cluster_config.get("type", "local")
     backend_config = cluster_config.get(cluster_type, {})
     walltime = backend_config.get("walltime")
+    walltime_seconds = (
+        parse_walltime_seconds(walltime) if walltime is not None else None
+    )
 
-    if walltime is not None:
-        return parse_walltime_seconds(walltime)
+    if requested_timeout is not None:
+        timeout = requested_timeout
+    elif configured_timeout is not None:
+        timeout = configured_timeout
+    elif walltime_seconds is not None:
+        timeout = walltime_seconds
+    else:
+        timeout = 3600
 
-    return 3600
+    if walltime_seconds is not None and walltime_seconds < timeout:
+        raise ValueError(
+            f"cluster.{cluster_type}.walltime must be greater than or equal to "
+            f"the notebook timeout ({timeout} seconds)."
+        )
+
+    return timeout
 
 
 

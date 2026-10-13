@@ -2,6 +2,7 @@ notebook:
   title: Rubin DP2 - PostgreSQL
   subtitle: Basic characterization of the object catalog
   last_verified_run: auto
+  timeout: 14400
   introduction: This notebook provides lightweight statistics for the DP2 object catalog.
 
 from_database: true

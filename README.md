@@ -107,10 +107,20 @@ python scripts/generate_automatic_photometric_qa.py configs/production/dp2/all/r
 By default, the CLI uses `notebooks/automatic_photometric_qa.ipynb` as the
 notebook template.
 
-The per-cell execution timeout defaults to the `walltime` of the active cluster
-backend (for example, `cluster.slurm.walltime`). If that backend has no
-configured walltime, the fallback is 3600 seconds. Pass `--timeout SECONDS` to
-override the derived value explicitly.
+Set the optional global per-cell execution timeout, in seconds, under the
+`notebook` section:
+
+```yaml
+notebook:
+  title: Rubin DP2 - PostgreSQL
+  timeout: 14400
+```
+
+If `notebook.timeout` is omitted, the timeout defaults to the `walltime` of the
+active cluster backend (for example, `cluster.slurm.walltime`), then falls back
+to 3600 seconds. Pass `--timeout SECONDS` to override the YAML timeout. When a
+cluster walltime is configured, it must be greater than or equal to the
+effective notebook timeout.
 
 Run the PostgreSQL report (connection details are described below):
 
@@ -143,9 +153,10 @@ selected statistics, plots, and survey footprints.
 
 Required global YAML sections for Parquet and HATS inputs:
 
-- `notebook`: report title, subtitle, optional introduction, and last verified run
-  date. Set `last_verified_run: auto` (or omit it) to use the system date when
-  the report executes.
+- `notebook`: report title, subtitle, optional introduction, last verified run
+  date, and optional global per-cell `timeout` in seconds. Set
+  `last_verified_run: auto` (or omit it) to use the system date when the report
+  executes.
 - `catalogs`: one or more catalog configurations.
 - `cluster`: Dask backend configuration shared by all catalogs.
 
